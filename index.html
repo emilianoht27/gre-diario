@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GRE diario</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GRE diario">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#24475E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF0; --paper:#FFFFFF; --ink:#1B2430; --muted:#5B6673; --line:#C9D2DA; --soft:#F3F6F8;
+  --bar:#24475E; --bar-ink:#FFFFFF; --bar2:#D7E0E7; --bar2-ink:#1F3445;
+  --accent:#0F6E8C; --accent-ink:#FFFFFF; --mark:#A86A12; --ok:#2F7D4F; --bad:#B23B3B; --focus:#F2B705;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11171C; --paper:#1A2229; --ink:#E4E9EE; --muted:#9AA6B2; --line:#34424E; --soft:#212B33;
+    --bar:#0E2A3A; --bar-ink:#EAF2F7; --bar2:#22313C; --bar2-ink:#D5E0E8;
+    --accent:#5FB3D1; --accent-ink:#0B1A22; --mark:#E0A84A; --ok:#6CC08E; --bad:#F08080; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11171C; --paper:#1A2229; --ink:#E4E9EE; --muted:#9AA6B2; --line:#34424E; --soft:#212B33;
+  --bar:#0E2A3A; --bar-ink:#EAF2F7; --bar2:#22313C; --bar2-ink:#D5E0E8;
+  --accent:#5FB3D1; --accent-ink:#0B1A22; --mark:#E0A84A; --ok:#6CC08E; --bad:#F08080; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+#app{height:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.serif{font-family:"Source Serif 4",Georgia,serif}
+.muted{color:var(--muted)} .small{font-size:.875rem} .pre{white-space:pre-wrap}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:10px 16px;cursor:pointer;font-weight:600;min-height:44px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.block{width:100%}
+.btn.link{border:none;background:none;padding:6px;color:var(--accent);text-decoration:underline;min-height:0}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+/* shell */
+.shell{height:100%;display:flex;flex-direction:column}
+.head{background:var(--bar);color:var(--bar-ink);padding:14px 18px 12px}
+.head h1{margin:0;font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:1.5rem;line-height:1.2}
+.head p{margin:2px 0 0;opacity:.8;font-size:.9rem}
+.main{flex:1;overflow:auto;padding:16px;min-height:0}
+.wrap{max-width:640px;margin:0 auto}
+.nav{display:flex;background:var(--paper);border-top:1px solid var(--line)}
+.nav button{flex:1;background:none;border:none;padding:10px 4px 12px;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="page"]{color:var(--accent)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px}
+.card h2{margin:0 0 6px;font-size:1.1rem}
+.big{font-family:"Source Serif 4",Georgia,serif;font-size:2.6rem;font-weight:600;line-height:1}
+.notice{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;margin:10px 0;border-radius:0 6px 6px 0;font-size:.92rem}
+.notice.err{border-color:var(--bad)} .notice.warn{border-color:var(--mark)}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.stat div{background:var(--soft);border-radius:6px;padding:10px;text-align:center}
+.stat strong{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.list button{all:unset;box-sizing:border-box;display:flex;width:100%;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.list button:focus-visible{outline:3px solid var(--focus)}
+.pill{font-size:.75rem;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);white-space:nowrap}
+.progress{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.field{margin:14px 0}
+.field > label,.field > .lbl{display:block;font-weight:600;font-size:.92rem;margin-bottom:6px}
+.input{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--paper);width:100%;min-height:44px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;flex:none}
+input[type=range]{width:100%}
+
+/* exam */
+.exam{height:100%;display:flex;flex-direction:column;background:var(--paper)}
+.tbar{background:var(--bar);color:var(--bar-ink);display:flex;align-items:center;gap:10px;padding:8px 12px;min-height:52px}
+.tbar .ttl{font-weight:600;font-size:.95rem}
+.tbtn{background:transparent;color:var(--bar-ink);border:1px solid rgba(255,255,255,.4);border-radius:5px;padding:6px 10px;cursor:pointer;font-weight:600;font-size:.85rem;min-height:36px}
+.tbtn[aria-pressed="true"]{background:var(--bar-ink);color:var(--bar)}
+.sbar{background:var(--bar2);color:var(--bar2-ink);display:flex;align-items:center;gap:12px;padding:6px 12px;font-size:.85rem}
+.timer{font-variant-numeric:tabular-nums;font-weight:700}
+.timer.low{color:var(--bad)}
+.stage{flex:1;overflow:auto;min-height:0}
+.qpad{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+.passage{font-family:"Source Serif 4",Georgia,serif;font-size:1.02rem;line-height:1.65;white-space:pre-wrap;background:var(--soft);border-left:3px solid var(--line);padding:14px 16px;margin-bottom:18px;border-radius:0 6px 6px 0}
+.q-dir{font-size:.88rem;color:var(--muted);margin:0 0 12px;font-style:italic}
+.q-stem{font-family:"Source Serif 4",Georgia,serif;font-size:1.12rem;line-height:1.6;white-space:pre-wrap;margin-bottom:18px}
+.qc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.qc div{border:1px solid var(--line);border-radius:6px;padding:12px;text-align:center}
+.qc b{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px;font-family:"Public Sans",sans-serif}
+.qc span{font-family:"Source Serif 4",Georgia,serif;font-size:1.1rem;white-space:pre-wrap}
+.qc-info{text-align:center;font-family:"Source Serif 4",Georgia,serif;font-size:1.05rem;margin-bottom:12px;white-space:pre-wrap}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;gap:14px;align-items:flex-start;text-align:left;background:none;border:1px solid var(--line);border-radius:6px;padding:12px;cursor:pointer;width:100%;min-height:48px}
+.opt .mk{flex:none;width:22px;height:22px;border:2px solid var(--ink);margin-top:1px;display:grid;place-items:center;border-radius:50%}
+.opt.sq .mk{border-radius:3px}
+.opt[aria-checked="true"]{border-color:var(--ink)}
+.opt[aria-checked="true"] .mk{background:var(--ink)}
+.opt[aria-checked="true"] .mk::after{content:"";width:8px;height:8px;background:var(--paper);border-radius:50%}
+.opt.sq[aria-checked="true"] .mk::after{border-radius:0;width:10px;height:5px;background:none;border-left:2px solid var(--paper);border-bottom:2px solid var(--paper);transform:rotate(-45deg) translate(1px,-1px)}
+.opt .ot{font-family:"Source Serif 4",Georgia,serif;font-size:1.04rem;white-space:pre-wrap}
+.blank{margin-bottom:14px}
+.blank h3{font-size:.85rem;margin:0 0 6px;color:var(--muted)}
+.numbox{font-size:1.25rem;width:12ch;padding:10px;border:2px solid var(--ink);border-radius:3px;background:var(--paper);font-variant-numeric:tabular-nums}
+.foot{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--paper)}
+.foot .btn{flex:1}
+.dots{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}
+.dots button{width:40px;height:40px;border-radius:6px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-weight:700;font-variant-numeric:tabular-nums}
+.dots button.done{background:var(--soft);border-color:var(--ink)}
+.dots button.cur{outline:3px solid var(--accent);outline-offset:1px}
+.dots button.flag{border-color:var(--mark);color:var(--mark)}
+
+/* results */
+.res-q{border-top:1px solid var(--line);padding:16px 0}
+.res-q .tag{font-size:.78rem;color:var(--muted)}
+.ok{color:var(--ok);font-weight:700} .bad{color:var(--bad);font-weight:700}
+.sol{background:var(--soft);border-radius:6px;padding:12px 14px;margin-top:10px;white-space:pre-wrap;font-size:.95rem;line-height:1.55}
+.sol b{display:block;margin-bottom:4px}
+details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.9rem;padding:4px 0}
+.ansline{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.92rem;margin-top:8px}
+
+/* calculator */
+.calc{position:fixed;z-index:30;width:260px;background:var(--soft);border:2px solid var(--bar);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);user-select:none;-webkit-user-select:none}
+.calc-h{background:var(--bar);color:var(--bar-ink);padding:6px 8px 6px 12px;display:flex;align-items:center;cursor:move;touch-action:none;font-weight:600;font-size:.9rem;border-radius:5px 5px 0 0}
+.calc-h button{margin-left:auto;background:none;border:none;color:inherit;font-size:1.3rem;cursor:pointer;padding:0 8px}
+.calc-d{margin:10px;background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;font-size:1.5rem;min-height:48px;position:relative;white-space:nowrap;overflow:hidden}
+.calc-d .m{position:absolute;left:8px;top:4px;font-size:.7rem;color:var(--muted)}
+.calc-g{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0 10px 10px}
+.calc-g button{border:1px solid var(--line);background:var(--paper);border-radius:5px;padding:10px 0;cursor:pointer;font-weight:600;touch-action:manipulation}
+.calc-g button.eq{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.calc-t{margin:0 10px 10px;width:calc(100% - 20px)}
+@media (max-width:560px){
+  .calc{left:0 !important;right:0;top:auto !important;bottom:0;width:100%;border-radius:12px 12px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .calc-h{cursor:default}
+}
+.ov{position:fixed;inset:0;background:rgba(10,20,30,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--paper);width:100%;max-width:520px;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));border-radius:12px 12px 0 0}
+.modal h2{margin:0 0 8px;font-size:1.2rem}
+@media (min-width:561px){.ov{align-items:center}.modal{border-radius:10px}}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:6px;z-index:60;font-weight:500;max-width:90vw}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+'use strict';
+/* ---------------- helpers ---------------- */
+const app = document.getElementById('app');
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag); let val;
+  if(attrs){ for(const k in attrs){ const v = attrs[k]; if(v == null || v === false) continue;
+    if(k === 'class') el.className = v; else if(k === 'text') el.textContent = v; else if(k === 'value') val = v;
+    else if(k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if(typeof v === 'boolean') el[k] = v; else el.setAttribute(k, v); } }
+  for(const c of kids.flat(Infinity)){ if(c == null || c === false) continue; el.append(c instanceof Node ? c : document.createTextNode(String(c))); }
+  if(val !== undefined) el.value = val; return el;
+}
+const clone = o => JSON.parse(JSON.stringify(o == null ? null : o));
+const L5 = 'ABCDEFGH';
+function toast(m){ const t = h('div',{class:'toast',role:'status',text:m}); document.body.append(t); setTimeout(()=>t.remove(), 3000); }
+function fmtTime(s){ s = Math.max(0, Math.ceil(s)); const m = Math.floor(s/60); return m + ':' + String(s%60).padStart(2,'0'); }
+function dkey(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function dlabel(k){ const [y,m,d] = k.split('-').map(Number); const dt = new Date(y, m-1, d); const today = dkey(); const t2 = new Date(); t2.setDate(t2.getDate()-1);
+  if(k === today) return 'Hoy'; if(k === dkey(t2)) return 'Ayer';
+  return dt.toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'short'}); }
+function parseNum(s){
+  if(s == null) return null; s = String(s).trim().replace(/\s/g,''); if(!s) return null;
+  if(/^-?\d+(\.\d+)?\/-?\d+(\.\d+)?$/.test(s)){ const [n,d] = s.split('/').map(Number); return d ? n/d : null; }
+  if(/^-?\d+,\d+$/.test(s)) s = s.replace(',','.'); else s = s.replace(/,/g,'');
+  const n = Number(s); return isFinite(n) ? n : null;
+}
+const sameSet = (a,b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && [...a].sort().every((x,i)=>x === [...b].sort()[i]);
+
+/* ---------------- item model ---------------- */
+const TYPES = {
+  qc:{sec:'Q', name:'Comparación cuantitativa'}, mc:{sec:'Q', name:'Opción única'}, ms:{sec:'Q', name:'Una o más respuestas'}, ne:{sec:'Q', name:'Respuesta numérica'},
+  tc:{sec:'V', name:'Completar texto'}, se:{sec:'V', name:'Equivalencia de oraciones'}, rc:{sec:'V', name:'Comprensión de lectura'}
+};
+const QC_OPTS = ['Quantity A is greater.','Quantity B is greater.','The two quantities are equal.','The relationship cannot be determined from the information given.'];
+const EN_TYPE = {qc:'Quantitative Comparison', mc:'Multiple Choice', ms:'Multiple Choice: Select One or More', ne:'Numeric Entry', tc:'Text Completion', se:'Sentence Equivalence', rc:'Reading Comprehension'};
+function isMultiPick(q){ return q.type === 'ms' || q.type === 'se' || (q.type === 'rc' && q.multi); }
+function optsOf(q){ return q.type === 'qc' ? QC_OPTS : (q.options || []); }
+function isAnswered(q, v){
+  if(v == null) return false;
+  if(q.type === 'tc') return Array.isArray(v) && v.length === q.blanks.length && v.every(x => typeof x === 'number');
+  if(q.type === 'se') return Array.isArray(v) && v.length === 2;
+  if(isMultiPick(q)) return Array.isArray(v) && v.length > 0;
+  if(q.type === 'ne') return String(v).trim() !== '';
+  return typeof v === 'number';
+}
+function isCorrect(q, v){
+  if(!isAnswered(q, v)) return false;
+  if(q.type === 'tc') return v.every((x,i) => x === q.answer[i]);
+  if(isMultiPick(q)) return sameSet(v, q.answer);
+  if(q.type === 'ne'){ const a = parseNum(v), b = parseNum(q.answer); if(a == null || b == null) return false; const t = Math.abs(parseNum(q.tolerance) || 0); return Math.abs(a-b) <= t + 1e-9*Math.max(1,Math.abs(b)); }
+  return v === q.answer;
+}
+function ansText(q, v){
+  if(!isAnswered(q, v) && !(q.type==='se' && Array.isArray(v) && v.length)) return 'Sin respuesta';
+  const o = optsOf(q);
+  if(q.type === 'tc') return v.map((x,i) => x == null ? '—' : q.blanks[i][x]).join(' / ');
+  if(Array.isArray(v)) return [...v].sort().map(i => L5[i] + ') ' + o[i]).join(' · ');
+  if(q.type === 'ne') return String(v);
+  return L5[v] + ') ' + o[v];
+}
+function keyText(q){
+  const o = optsOf(q);
+  if(q.type === 'tc') return q.answer.map((x,i) => q.blanks[i][x]).join(' / ');
+  if(Array.isArray(q.answer)) return [...q.answer].sort().map(i => L5[i] + ') ' + o[i]).join(' · ');
+  if(q.type === 'ne') return String(q.answer);
+  return L5[q.answer] + ') ' + o[q.answer];
+}
+function validItem(q){
+  try{
+    if(!q || !TYPES[q.type] || typeof q.stem !== 'string' || (!q.stem.trim() && q.type !== 'qc') || typeof q.solution !== 'string' || !q.solution.trim()) return false;
+    const n = (q.options||[]).length, ix = i => Number.isInteger(i) && i >= 0;
+    switch(q.type){
+      case 'qc': return typeof q.quantityA === 'string' && typeof q.quantityB === 'string' && ix(q.answer) && q.answer < 4;
+      case 'mc': return n === 5 && ix(q.answer) && q.answer < n;
+      case 'ms': return n >= 3 && n <= 8 && Array.isArray(q.answer) && q.answer.length >= 1 && q.answer.every(i => ix(i) && i < n);
+      case 'ne': return parseNum(q.answer) != null;
+      case 'tc': return Array.isArray(q.blanks) && q.blanks.length >= 1 && q.blanks.length <= 3 && q.blanks.every(b => Array.isArray(b) && b.length === (q.blanks.length === 1 ? 5 : 3)) && Array.isArray(q.answer) && q.answer.length === q.blanks.length && q.answer.every((a,i) => ix(a) && a < q.blanks[i].length);
+      case 'se': return n === 6 && Array.isArray(q.answer) && q.answer.length === 2 && q.answer.every(i => ix(i) && i < 6) && q.answer[0] !== q.answer[1];
+      case 'rc': return typeof q.passage === 'string' && q.passage.trim().length > 40 && (q.multi ? n === 3 && Array.isArray(q.answer) && q.answer.length >= 1 && q.answer.every(i => ix(i) && i < 3) : n === 5 && ix(q.answer) && q.answer < 5);
+    }
+  }catch(e){}
+  return false;
+}
+function normalizeItem(q){
+  if(typeof q.stem !== 'string') q.stem = q.stem == null ? '' : String(q.stem);
+  if(q.type === 'tc' && typeof q.answer === 'number') q.answer = [q.answer];
+  if((q.type === 'ms' || q.type === 'se' || (q.type === 'rc' && q.multi)) && typeof q.answer === 'number') q.answer = [q.answer];
+  if(q.type === 'rc' && !q.multi && Array.isArray(q.answer) && q.answer.length === 1) q.answer = q.answer[0];
+  if(q.type === 'ne') q.answer = String(q.answer);
+  if(Array.isArray(q.answer) && q.type !== 'tc') q.answer = [...new Set(q.answer)].sort((a,b)=>a-b);
+  return q;
+}
+function keyMatches(q, a){
+  if(a == null || a === 'flag') return false;
+  if(q.type === 'tc'){ const arr = Array.isArray(a) ? a : [a]; return arr.length === q.answer.length && arr.every((x,i) => Number(x) === q.answer[i]); }
+  if(isMultiPick(q)){ const arr = (Array.isArray(a) ? a : [a]).map(Number); return sameSet([...new Set(arr)], q.answer); }
+  if(q.type === 'ne'){ const x = parseNum(a), y = parseNum(q.answer); return x != null && y != null && Math.abs(x-y) <= Math.abs(parseNum(q.tolerance)||0) + 1e-9*Math.max(1,Math.abs(y)); }
+  return Number(Array.isArray(a) ? a[0] : a) === q.answer;
+}
+
+const BANK = {"passages":{"P1":"For decades, researchers have known that many migratory birds can detect Earth's magnetic field, but the mechanism has remained elusive. One hypothesis holds that iron-rich cells in the upper beak act as tiny compasses, transmitting information to the brain through the trigeminal nerve. A competing hypothesis locates the sense in the eye, where light-sensitive proteins called cryptochromes may undergo chemical reactions whose outcomes depend on the orientation of the magnetic field.\n\nThe beak hypothesis suffered a serious setback when the iron-rich cells were identified as immune cells with no connection to nerves. The eye hypothesis, meanwhile, makes a striking prediction: because the reactions it posits are extremely delicate, they should be disrupted by weak radio-frequency noise. Experiments have borne this out—birds exposed to the faint electromagnetic noise of ordinary electronic equipment lose their ability to orient. Some researchers regard this sensitivity as strong evidence for the eye hypothesis, since an iron-based compass would not be so fragile. Others treat it as a puzzle: how could natural selection have favored a sense so easily jammed? A likely answer is that, until very recently, the natural environment contained almost no radio-frequency noise of the relevant strength.","P2":"In 1968 the ecologist Garrett Hardin argued that any resource held in common—a pasture, a fishery—would inevitably be overused, because each user captures the full benefit of taking a little more while bearing only a fraction of the cost. Hardin concluded that such resources must be either privatized or placed under state control. The political economist Elinor Ostrom challenged this conclusion not by disputing Hardin's logic but by questioning its premises. Hardin's model, she noted, assumed users who cannot communicate, cannot observe one another, and cannot make binding agreements. Real communities, she found, frequently can do all three.\n\nDrawing on case studies ranging from Swiss alpine meadows to Philippine irrigation systems, Ostrom identified conditions under which users had sustained shared resources for centuries: clearly defined boundaries, rules adapted to local circumstances, monitoring by the users themselves, and graduated sanctions for violators. Her work did not show that common ownership always succeeds; many of her cases were failures. It showed instead that the outcome Hardin called inevitable is, in fact, contingent.","P3":"Impressionism is often described as a revolt against the academic painting of nineteenth-century France, and in one sense it was: the Impressionists rejected the polished surfaces, historical subjects, and studio lighting favored by the official Salon. Yet the familiar story of embattled outsiders overstates the break. Several leading Impressionists had trained in academic studios, and their celebrated attention to the fleeting effects of light owed much to the oil sketch, a genre that academic teachers had long required of their students as a preparatory exercise. What the Impressionists did was to exhibit such sketches as finished works. The innovation, in other words, lay less in a new technique than in a new judgment about which of the painter's existing practices deserved to be called art.","P4":"It has long been known that people remember newly learned material better after a night's sleep than after an equal period of wakefulness. The simplest explanation is passive: sleep merely shields new memories from the interference of fresh experiences. A more ambitious account holds that sleep actively strengthens memories, as the brain replays the day's experiences during particular phases of slow-wave sleep.\n\nThe two accounts make different predictions. If sleep only prevents interference, then a period of quiet wakefulness without new input should benefit memory as much as sleep does. Studies have found that quiet wakefulness does help—but not as much. Moreover, researchers who play a sound associated with a learned task to sleeping subjects, thereby apparently prompting replay of that task, find selectively improved recall of the cued material. Neither finding refutes the passive account outright, but together they are difficult to explain without some active process.","P5":"A city council found that neighborhoods with more streetlights had lower rates of nighttime burglary than neighborhoods with fewer streetlights. The council therefore proposed installing additional streetlights in the neighborhoods with the highest burglary rates, predicting that nighttime burglary in those neighborhoods would decline.","P6":"Readers of Victorian fiction often complain about its coincidences: the long-lost relative who appears at the decisive moment, the letter that arrives a day too late. Modern critics have tended to treat such devices as lapses, concessions to the demands of serial publication or to a public that cared more about suspense than plausibility. But this judgment may say more about our assumptions than about the novels. Many Victorian writers and readers inhabited a religious culture in which the idea of providence—an order guiding apparently random events—was taken seriously. For them, a well-timed coincidence need not signal authorial carelessness; it could express a conviction that the world itself was meaningfully arranged. To read such moments as failures of realism is to assume that the novelists were attempting, and falling short of, a kind of realism they may not have wanted."},"items":[{"type":"qc","topic":"Álgebra: potencias","difficulty":"media","info":"x > 1","quantityA":"x²","quantityB":"x","answer":0,"solution":"1) Como x > 1, multiplicar ambos lados de x > 1 por x (positivo) da x² > x.\n2) Prueba rápida: x = 2 → A = 4, B = 2.\nPor qué no las otras: D tentaría si x pudiera ser 1 o fracción, pero la condición x > 1 lo descarta.\nEstrategia GRE: en comparación cuantitativa, prueba un número fácil y luego busca un caso que cambie la relación."},{"type":"qc","topic":"Álgebra: casos con enteros","difficulty":"media","info":"x is an integer and −2 ≤ x ≤ 2","quantityA":"x²","quantityB":"x","answer":3,"solution":"1) x = 0 → A = 0, B = 0: iguales.\n2) x = 2 → A = 4, B = 2: A mayor.\n3) Como hay al menos dos relaciones posibles, no se puede determinar.\nPor qué no las otras: elegir A ocurre si solo pruebas números positivos grandes.\nEstrategia GRE: prueba 0, 1, negativos y extremos del intervalo."},{"type":"qc","topic":"Estadística: promedio","difficulty":"media","quantityA":"The average (arithmetic mean) of 17, 23, and 29","quantityB":"23","answer":2,"solution":"1) Los números están igualmente espaciados (diferencia 6), así que el promedio es el número central.\n2) Promedio = 23 → iguales.\nEstrategia GRE: en listas igualmente espaciadas, promedio = mediana = (primero + último)/2."},{"type":"qc","topic":"Potencias de fracciones","difficulty":"media","quantityA":"(0.9)¹⁰","quantityB":"0.9","answer":1,"solution":"1) Un número entre 0 y 1 elevado a una potencia mayor que 1 se hace más pequeño.\n2) (0.9)¹⁰ ≈ 0.349 < 0.9 → B mayor.\nPor qué no A: intuición de que \"elevar agranda\", que solo es cierta para números mayores que 1."},{"type":"qc","topic":"Geometría: círculos","difficulty":"difícil","info":"A circle has circumference 10π.","quantityA":"The area of the circle","quantityB":"78","answer":0,"solution":"1) 2πr = 10π → r = 5.\n2) Área = πr² = 25π ≈ 25 × 3.1416 = 78.54.\n3) 78.54 > 78 → A mayor.\nPor qué no C: 25π se parece a 78, pero π > 3.12, así que 25π > 78.\nEstrategia GRE: usa π ≈ 3.14 y verifica si la diferencia es mayor que el error de redondeo."},{"type":"qc","topic":"Sistemas de ecuaciones","difficulty":"media","info":"x + y = 10 and x − y = 4","quantityA":"x","quantityB":"2y","answer":0,"solution":"1) Suma las ecuaciones: 2x = 14 → x = 7.\n2) y = 10 − 7 = 3 → 2y = 6.\n3) 7 > 6 → A mayor."},{"type":"qc","topic":"Divisibilidad: residuos","difficulty":"media","info":"n is a positive integer.","quantityA":"The remainder when 7n is divided by 7","quantityB":"0","answer":2,"solution":"1) 7n es múltiplo de 7 para cualquier entero n.\n2) El residuo siempre es 0 → iguales.\nPor qué no D: aunque n varía, el residuo no cambia."},{"type":"qc","topic":"Divisores","difficulty":"media","quantityA":"The number of positive divisors of 36","quantityB":"The number of positive divisors of 40","answer":0,"solution":"1) 36 = 2²·3² → (2+1)(2+1) = 9 divisores.\n2) 40 = 2³·5 → (3+1)(1+1) = 8 divisores.\n3) 9 > 8 → A mayor.\nEstrategia GRE: número de divisores = producto de (exponente + 1) en la factorización prima."},{"type":"qc","topic":"Fracciones: comparación","difficulty":"difícil","info":"0 < a < b","quantityA":"a/b","quantityB":"(a + 1)/(b + 1)","answer":1,"solution":"1) Resta: (a+1)/(b+1) − a/b = [b(a+1) − a(b+1)] / [b(b+1)] = (b − a)/[b(b+1)].\n2) Como b > a > 0, la diferencia es positiva → B mayor.\n3) Prueba: a = 1, b = 2 → A = 0.5, B = 2/3.\nEstrategia GRE: sumar lo mismo arriba y abajo acerca una fracción menor que 1 hacia 1."},{"type":"qc","topic":"Geometría: triángulos","difficulty":"difícil","info":"In triangle PQR, the measure of angle P is 50° and the measure of angle Q is 60°.","quantityA":"The length of side QR","quantityB":"The length of side PQ","answer":1,"solution":"1) Ángulo R = 180 − 50 − 60 = 70°.\n2) QR está opuesto a P (50°); PQ está opuesto a R (70°).\n3) El lado opuesto al ángulo mayor es el más largo → PQ > QR → B mayor.\nPor qué no D: no hace falta conocer medidas; la relación ángulo-lado basta."},{"type":"qc","topic":"Probabilidad sin reemplazo","difficulty":"difícil","info":"A bag contains 3 red marbles and 5 blue marbles. Two marbles are drawn at random without replacement.","quantityA":"The probability that both marbles drawn are blue","quantityB":"1/3","answer":0,"solution":"1) P = (5/8) × (4/7) = 20/56 = 5/14.\n2) 5/14 ≈ 0.357 y 1/3 ≈ 0.333 → A mayor.\nPor qué no B: si usas reemplazo obtienes 25/64 ≈ 0.39, que también es mayor, pero el error típico es calcular 5/8 × 5/8 mal o comparar fracciones sin convertir."},{"type":"qc","topic":"Valor absoluto","difficulty":"media","info":"x ≠ 0","quantityA":"x/|x|","quantityB":"1","answer":3,"solution":"1) Si x > 0, x/|x| = 1 → iguales.\n2) Si x < 0, x/|x| = −1 → B mayor.\n3) Dos relaciones posibles → no se puede determinar."},{"type":"qc","topic":"Potencias: estimación","difficulty":"difícil","quantityA":"2³⁰","quantityB":"10⁹","answer":0,"solution":"1) 2¹⁰ = 1024 > 1000 = 10³.\n2) 2³⁰ = (2¹⁰)³ > (10³)³ = 10⁹ → A mayor.\nEstrategia GRE: 2¹⁰ ≈ 10³ es un atajo clave para comparar potencias de 2 y de 10."},{"type":"qc","topic":"Porcentajes sucesivos","difficulty":"media","info":"The price of an item is increased by 20 percent, and then the new price is decreased by 20 percent.","quantityA":"The final price","quantityB":"The original price","answer":1,"solution":"1) Multiplicadores: 1.20 × 0.80 = 0.96.\n2) El precio final es 96% del original → B mayor.\nPor qué no C: el 20% de bajada se aplica sobre una cantidad mayor, así que no se cancela."},{"type":"qc","topic":"Signos y potencias","difficulty":"media","info":"k < 0","quantityA":"k³","quantityB":"k²","answer":1,"solution":"1) k³ es negativo (potencia impar de un negativo).\n2) k² es positivo.\n3) Positivo > negativo → B mayor."},{"type":"qc","topic":"Estadística: media y mediana","difficulty":"media","info":"S = {3, 7, 7, 10, 13}","quantityA":"The mean of S","quantityB":"The median of S","answer":0,"solution":"1) Media = (3+7+7+10+13)/5 = 40/5 = 8.\n2) Mediana = valor central = 7.\n3) 8 > 7 → A mayor."},{"type":"qc","topic":"Ecuaciones cuadráticas","difficulty":"media","info":"x² = 16","quantityA":"x","quantityB":"4","answer":3,"solution":"1) x² = 16 → x = 4 o x = −4.\n2) Si x = 4 son iguales; si x = −4, B es mayor.\n3) No se puede determinar.\nPor qué no C: olvidar la raíz negativa es la trampa clásica."},{"type":"qc","topic":"Geometría: área y perímetro","difficulty":"difícil","info":"A rectangle has a perimeter of 20.","quantityA":"The area of the rectangle","quantityB":"25","answer":3,"solution":"1) Largo + ancho = 10.\n2) Si es cuadrado 5×5, área = 25 → iguales.\n3) Si es 9×1, área = 9 → B mayor.\n4) Dos relaciones posibles → no se puede determinar.\nPor qué no B: un cuadrado también es rectángulo, así que el área puede llegar a 25."},{"type":"qc","topic":"Radicales","difficulty":"media","quantityA":"√50 + √18","quantityB":"√128","answer":2,"solution":"1) √50 = 5√2, √18 = 3√2 → A = 8√2.\n2) √128 = √(64·2) = 8√2.\n3) Iguales.\nPor qué no A: sumar dentro de la raíz (√68) es un error; las raíces no se suman así."},{"type":"qc","topic":"Enteros: casos","difficulty":"difícil","info":"a and b are positive integers, and a + b = 7.","quantityA":"ab","quantityB":"12","answer":3,"solution":"1) Pares posibles: (1,6) → 6; (2,5) → 10; (3,4) → 12.\n2) ab puede ser menor que 12 o igual a 12.\n3) No se puede determinar."},{"type":"mc","topic":"Ecuaciones lineales","difficulty":"media","stem":"If 3x − 7 = 2x + 5, what is the value of 2x?","options":["12","18","20","22","24"],"answer":4,"solution":"1) Resta 2x de ambos lados: x − 7 = 5.\n2) x = 12.\n3) 2x = 24.\nPor qué no A: 12 es x, pero la pregunta pide 2x. Lee siempre qué se pide al final."},{"type":"mc","topic":"Porcentajes: descuento","difficulty":"media","stem":"A shirt costs $40 after a 20 percent discount. What was the original price of the shirt?","options":["$32","$48","$50","$52","$60"],"answer":2,"solution":"1) Precio con descuento = 0.80 × original.\n2) 0.80 × P = 40 → P = 50.\nPor qué no B: sumar 20% a 40 (48) usa la base equivocada; el 20% se aplicó al precio original."},{"type":"mc","topic":"Promedio de enteros consecutivos","difficulty":"media","stem":"What is the average (arithmetic mean) of all the integers from 12 to 48, inclusive?","options":["29","30","31","32","33"],"answer":1,"solution":"1) Son enteros consecutivos (igualmente espaciados).\n2) Promedio = (12 + 48)/2 = 30.\nEstrategia GRE: no sumes todos; usa (primero + último)/2."},{"type":"mc","topic":"Razones","difficulty":"media","stem":"The ratio of boys to girls in a class is 3 to 5. If there are 40 students in the class, how many more girls than boys are there?","options":["10","12","15","20","25"],"answer":0,"solution":"1) 3 + 5 = 8 partes; cada parte = 40/8 = 5 estudiantes.\n2) Niños = 15, niñas = 25.\n3) Diferencia = 10.\nPor qué no C o E: 15 y 25 son las cantidades, no la diferencia."},{"type":"mc","topic":"Funciones","difficulty":"media","stem":"If f(x) = 2x² − 3x + 1, what is the value of f(−2)?","options":["3","7","11","15","19"],"answer":3,"solution":"1) f(−2) = 2(−2)² − 3(−2) + 1.\n2) = 2(4) + 6 + 1 = 15.\nPor qué no B: el error típico es (−2)² = −4 o −3(−2) = −6."},{"type":"mc","topic":"Combinaciones","difficulty":"media","stem":"In how many different ways can a committee of 3 people be selected from a group of 7 people?","options":["21","35","42","105","210"],"answer":1,"solution":"1) El orden no importa → combinación C(7,3).\n2) C(7,3) = (7×6×5)/(3×2×1) = 210/6 = 35.\nPor qué no E: 210 son permutaciones (cuenta órdenes distintos como diferentes)."},{"type":"mc","topic":"Velocidad promedio","difficulty":"difícil","stem":"A car travels 150 miles at 50 miles per hour and then returns along the same route at 75 miles per hour. What is the car's average speed for the entire trip, in miles per hour?","options":["55","60","62.5","65","70"],"answer":1,"solution":"1) Tiempo de ida = 150/50 = 3 h; regreso = 150/75 = 2 h.\n2) Distancia total = 300; tiempo total = 5 h.\n3) Velocidad promedio = 300/5 = 60.\nPor qué no C: 62.5 es el promedio simple de 50 y 75; no sirve porque pasa más tiempo a 50."},{"type":"mc","topic":"Residuos y ciclos","difficulty":"difícil","stem":"What is the remainder when 2²⁰ is divided by 7?","options":["1","2","3","4","6"],"answer":3,"solution":"1) Residuos de 2ⁿ entre 7: 2¹→2, 2²→4, 2³→1, y se repite cada 3.\n2) 20 = 3×6 + 2 → mismo residuo que 2² → 4.\nEstrategia GRE: busca el ciclo de residuos en lugar de calcular la potencia."},{"type":"mc","topic":"Pitágoras","difficulty":"media","stem":"The hypotenuse of a right triangle has length 13 and one leg has length 5. What is the area of the triangle?","options":["30","32.5","60","65","78"],"answer":0,"solution":"1) Otro cateto: √(13² − 5²) = √(169 − 25) = √144 = 12.\n2) Área = (5 × 12)/2 = 30.\nPor qué no C: 60 es el producto de los catetos sin dividir entre 2."},{"type":"mc","topic":"Porcentajes pequeños","difficulty":"media","stem":"If 0.2 percent of x is 6, what is the value of x?","options":["30","300","1,200","3,000","12,000"],"answer":3,"solution":"1) 0.2% = 0.002.\n2) 0.002x = 6 → x = 3,000.\nPor qué no A: confundir 0.2% con 0.2 (20%) da 30."},{"type":"mc","topic":"Porcentajes sucesivos","difficulty":"media","stem":"A number is increased by 25 percent, and the result is then decreased by 40 percent. The final number is how much greater or less than the original number?","options":["25 percent less","20 percent less","15 percent less","No change","15 percent greater"],"answer":0,"solution":"1) Multiplicadores: 1.25 × 0.60 = 0.75.\n2) El resultado es 75% del original → 25% menos.\nPor qué no C: restar 40 − 25 = 15 ignora que los porcentajes se multiplican."},{"type":"mc","topic":"Identidades algebraicas","difficulty":"difícil","stem":"If x and y are integers such that xy = 12 and x + y = −7, what is the value of x² + y²?","options":["13","25","37","49","73"],"answer":1,"solution":"1) x² + y² = (x + y)² − 2xy.\n2) = (−7)² − 2(12) = 49 − 24 = 25.\n3) Verificación: x = −3, y = −4 → 9 + 16 = 25.\nPor qué no D: 49 es (x + y)² sin restar 2xy."},{"type":"mc","topic":"Enteros consecutivos","difficulty":"media","stem":"The sum of five consecutive even integers is 150. What is the greatest of the five integers?","options":["26","28","30","32","34"],"answer":4,"solution":"1) El promedio (y número central) es 150/5 = 30.\n2) Los números son 26, 28, 30, 32, 34.\n3) El mayor es 34.\nPor qué no C: 30 es el central, no el mayor."},{"type":"mc","topic":"Geometría: longitud de arco","difficulty":"media","stem":"A circle has radius 6. What is the length of an arc of the circle with a central angle of 60 degrees?","options":["2π","3π","4π","6π","12π"],"answer":0,"solution":"1) Circunferencia = 2π(6) = 12π.\n2) 60° es 60/360 = 1/6 del círculo.\n3) Arco = 12π/6 = 2π.\nPor qué no D: 6π es el área del sector (36π/6), no la longitud del arco."},{"type":"mc","topic":"Valor absoluto","difficulty":"media","stem":"What is the sum of all values of x that satisfy |2x − 3| = 7?","options":["−2","1","3","5","7"],"answer":2,"solution":"1) 2x − 3 = 7 → x = 5.\n2) 2x − 3 = −7 → x = −2.\n3) Suma = 5 + (−2) = 3.\nPor qué no D: 5 es solo una de las soluciones."},{"type":"mc","topic":"Geometría analítica","difficulty":"media","stem":"A line passes through the points (1, 2) and (4, 11). What is the y-intercept of the line?","options":["−5","−4","−3","−2","−1"],"answer":4,"solution":"1) Pendiente = (11 − 2)/(4 − 1) = 3.\n2) y = 3x + b; con (1, 2): 2 = 3 + b → b = −1.\nEstrategia GRE: verifica con el otro punto: 3(4) − 1 = 11 ✓."},{"type":"mc","topic":"Exponentes","difficulty":"media","stem":"If 2^(x + 3) = 32, what is the value of x?","options":["−2","−1","0","1","2"],"answer":4,"solution":"1) 32 = 2⁵.\n2) x + 3 = 5 → x = 2."},{"type":"mc","topic":"Mezclas","difficulty":"difícil","stem":"A 20-liter mixture is 30 percent alcohol by volume. How many liters of pure alcohol must be added to make the mixture 50 percent alcohol?","options":["4","6","8","10","12"],"answer":2,"solution":"1) Alcohol inicial = 0.30 × 20 = 6 L.\n2) (6 + a)/(20 + a) = 0.5 → 6 + a = 10 + 0.5a → 0.5a = 4 → a = 8.\n3) Verificación: 14/28 = 50% ✓.\nPor qué no A: 4 sale de olvidar que el volumen total también crece."},{"type":"mc","topic":"Desviación estándar","difficulty":"media","stem":"Which of the following lists of numbers has the greatest standard deviation?","options":["10, 10, 10, 10","8, 9, 11, 12","5, 10, 10, 15","1, 10, 10, 19","9, 10, 10, 11"],"answer":3,"solution":"1) Todas las listas tienen media 10.\n2) La desviación estándar mide qué tan lejos están los valores de la media.\n3) En 1, 10, 10, 19 los extremos están a 9 de la media, más que en cualquier otra lista.\nEstrategia GRE: casi nunca hay que calcular la desviación estándar; compara qué tan dispersos están los datos."},{"type":"mc","topic":"Probabilidad: dados","difficulty":"media","stem":"Two fair six-sided dice are rolled. What is the probability that the sum of the numbers rolled is 8?","options":["1/12","5/36","1/6","7/36","2/9"],"answer":1,"solution":"1) Pares que suman 8: (2,6), (3,5), (4,4), (5,3), (6,2) → 5 casos.\n2) Total de resultados: 36.\n3) P = 5/36.\nPor qué no D: 7/36 olvida que (4,4) se cuenta una sola vez o suma mal los casos."},{"type":"mc","topic":"Interés compuesto","difficulty":"media","stem":"An investment of $2,000 earns 5 percent annual interest, compounded annually. How much interest does it earn in 2 years?","options":["$195","$200","$205","$210","$220"],"answer":2,"solution":"1) Año 1: 2,000 × 0.05 = 100 → 2,100.\n2) Año 2: 2,100 × 0.05 = 105 → 2,205.\n3) Interés total = 205.\nPor qué no B: 200 es interés simple."},{"type":"mc","topic":"Razones encadenadas","difficulty":"media","stem":"If a/b = 3/4 and b/c = 2/5, what is the value of a/c?","options":["1/10","3/20","1/5","3/10","8/15"],"answer":3,"solution":"1) a/c = (a/b)(b/c).\n2) = (3/4)(2/5) = 6/20 = 3/10."},{"type":"mc","topic":"Polígonos","difficulty":"media","stem":"Each interior angle of a regular polygon measures 140 degrees. How many sides does the polygon have?","options":["7","8","9","10","12"],"answer":2,"solution":"1) Ángulo exterior = 180 − 140 = 40°.\n2) Los ángulos exteriores suman 360° → 360/40 = 9 lados."},{"type":"mc","topic":"Trabajo conjunto","difficulty":"media","stem":"Working alone, Ana can paint a fence in 6 hours and Ben can paint the same fence in 3 hours. Working together at these rates, how long will it take them to paint the fence?","options":["1 hour","1.5 hours","1.75 hours","2 hours","4.5 hours"],"answer":3,"solution":"1) Tasas: 1/6 y 1/3 de cerca por hora.\n2) Juntos: 1/6 + 1/3 = 1/2 de cerca por hora.\n3) Tiempo = 2 horas.\nPor qué no E: 4.5 es el promedio de los tiempos; trabajar juntos siempre es más rápido que el más rápido."},{"type":"mc","topic":"Dígito de las unidades","difficulty":"media","stem":"What is the units digit of 3⁴⁷?","options":["1","3","5","7","9"],"answer":3,"solution":"1) Unidades de 3ⁿ: 3, 9, 7, 1 (ciclo de 4).\n2) 47 = 4×11 + 3 → tercera posición del ciclo → 7."},{"type":"ms","topic":"Divisores","difficulty":"media","stem":"Which of the following are factors of 84?\n\nIndicate all such numbers.","options":["3","8","12","14","21","28"],"answer":[0,2,3,4,5],"solution":"1) 84 = 2² × 3 × 7.\n2) 3 ✓; 8 = 2³ ✗ (84 solo tiene 2²); 12 = 2²·3 ✓; 14 = 2·7 ✓; 21 = 3·7 ✓; 28 = 2²·7 ✓.\nEstrategia GRE: compara la factorización de cada opción con la de 84."},{"type":"ms","topic":"Desigualdades cuadráticas","difficulty":"difícil","stem":"Which of the following values of x satisfy the inequality x² − 5x + 6 < 0?\n\nIndicate all such values.","options":["1.5","2","2.5","2.9","3","3.5"],"answer":[2,3],"solution":"1) x² − 5x + 6 = (x − 2)(x − 3).\n2) El producto es negativo cuando x está entre 2 y 3: 2 < x < 3.\n3) Cumplen 2.5 y 2.9. En 2 y 3 vale 0, que no es < 0.\nPor qué no 2 y 3: la desigualdad es estricta."},{"type":"ms","topic":"Paridad","difficulty":"media","stem":"If n is an odd integer, which of the following must be even?\n\nIndicate all such expressions.","options":["n + 1","2n + 1","n²","n² + n","3n + 3","n³"],"answer":[0,3,4],"solution":"1) Impar + 1 = par ✓.\n2) 2n + 1: par + 1 = impar ✗.\n3) n²: impar × impar = impar ✗.\n4) n² + n: impar + impar = par ✓.\n5) 3n + 3: impar + impar = par ✓.\n6) n³: impar ✗.\nEstrategia GRE: prueba con n = 1."},{"type":"ms","topic":"Desigualdad del triángulo","difficulty":"media","stem":"Two sides of a triangle have lengths 7 and 10. Which of the following could be the length of the third side?\n\nIndicate all such lengths.","options":["2","3","5","12","16","17"],"answer":[2,3,4],"solution":"1) El tercer lado debe cumplir 10 − 7 < s < 10 + 7 → 3 < s < 17.\n2) Cumplen 5, 12 y 16.\nPor qué no 3 ni 17: con igualdad los puntos quedan en línea recta y no hay triángulo."},{"type":"ms","topic":"Comparación de fracciones","difficulty":"media","stem":"Which of the following numbers are greater than 1/3?\n\nIndicate all such numbers.","options":["0.3","3/8","5/16","0.34","7/20","4/13"],"answer":[1,3,4],"solution":"1) 1/3 ≈ 0.3333.\n2) 0.3 ✗; 3/8 = 0.375 ✓; 5/16 = 0.3125 ✗; 0.34 ✓; 7/20 = 0.35 ✓; 4/13 ≈ 0.3077 ✗."},{"type":"ms","topic":"Estadística: media y mediana","difficulty":"difícil","stem":"The median of a list of five different positive integers is 10, and the average (arithmetic mean) of the five integers is 12. Which of the following could be the greatest integer in the list?\n\nIndicate all such integers.","options":["15","17","25","36","37"],"answer":[1,2,3],"solution":"1) Suma = 60. Lista: a < b < 10 < d < e → a + b + d + e = 50.\n2) Mayor máximo: a = 1, b = 2, d = 11 → e = 36.\n3) Mayor mínimo: a = 8, b = 9 → d + e = 33 con d < e → e ≥ 17 (16 + 17).\n4) Cualquier valor de 17 a 36 funciona (ej. 25: a = 5, b = 9, d = 11).\nPor qué no 15 ni 37: quedan fuera del rango posible."},{"type":"ms","topic":"Razones y proporciones","difficulty":"difícil","stem":"x and y are positive numbers and x/y = 0.6. Which of the following must be true?\n\nIndicate all such statements.","options":["x < y","x + y = 1.6y","y − x = 0.4x","x/(x + y) = 3/8","5x = 3y"],"answer":[0,1,3,4],"solution":"1) x = 0.6y.\n2) x < y ✓.\n3) x + y = 1.6y ✓.\n4) y − x = 0.4y, no 0.4x ✗.\n5) x/(x + y) = 0.6y/1.6y = 3/8 ✓.\n6) 5x = 3y ⇔ x/y = 3/5 = 0.6 ✓.\nPor qué no C: la diferencia es 0.4 de y, no de x."},{"type":"ms","topic":"Números primos","difficulty":"media","stem":"Which of the following numbers are prime?\n\nIndicate all such numbers.","options":["51","53","57","59","87","91"],"answer":[1,3],"solution":"1) 51 = 3 × 17; 57 = 3 × 19; 87 = 3 × 29; 91 = 7 × 13.\n2) 53 y 59 no tienen divisores primos ≤ 7 → son primos.\nEstrategia GRE: suma los dígitos para detectar múltiplos de 3 y recuerda 91 = 7 × 13."},{"type":"ms","topic":"Desviación estándar","difficulty":"difícil","stem":"A data set has a mean of 20 and a standard deviation of 4. Which of the following values are more than 1.5 standard deviations away from the mean?\n\nIndicate all such values.","options":["13","14","15","25","26","27"],"answer":[0,5],"solution":"1) 1.5 × 4 = 6 → el intervalo es 14 a 26.\n2) \"Más de\" 1.5 desviaciones: menores que 14 o mayores que 26.\n3) Cumplen 13 y 27. 14 y 26 están exactamente a 1.5, no a más."},{"type":"ms","topic":"Leyes de exponentes","difficulty":"media","stem":"Which of the following are equal to 2¹²?\n\nIndicate all such expressions.","options":["4⁶","8³","16³","2⁶ + 2⁶","(2⁴)³","2¹⁰ × 4"],"answer":[0,2,4,5],"solution":"1) 4⁶ = 2¹² ✓.\n2) 8³ = 2⁹ ✗.\n3) 16³ = 2¹² ✓.\n4) 2⁶ + 2⁶ = 2 × 2⁶ = 2⁷ ✗.\n5) (2⁴)³ = 2¹² ✓.\n6) 2¹⁰ × 2² = 2¹² ✓.\nPor qué no D: sumar potencias iguales no suma exponentes."},{"type":"ne","topic":"Porcentajes","difficulty":"media","stem":"What is 35 percent of 240?","answer":"84","solution":"1) 10% de 240 = 24 → 30% = 72.\n2) 5% = 12.\n3) 35% = 72 + 12 = 84."},{"type":"ne","topic":"Ecuaciones con decimales","difficulty":"media","stem":"If 4/x = 0.16, what is the value of x?","answer":"25","solution":"1) x = 4/0.16.\n2) = 400/16 = 25."},{"type":"ne","topic":"Promedios","difficulty":"media","stem":"The average (arithmetic mean) of six numbers is 15. When one of the numbers is removed, the average of the remaining five numbers is 14. What number was removed?","answer":"20","solution":"1) Suma de seis = 6 × 15 = 90.\n2) Suma de cinco = 5 × 14 = 70.\n3) Número quitado = 90 − 70 = 20.\nEstrategia GRE: con promedios, trabaja con sumas."},{"type":"ne","topic":"Geometría: rectángulos","difficulty":"media","stem":"The length of a rectangle is 3 more than its width, and its area is 70. What is the perimeter of the rectangle?","answer":"34","solution":"1) w(w + 3) = 70 → w² + 3w − 70 = 0 → (w + 10)(w − 7) = 0 → w = 7.\n2) Largo = 10.\n3) Perímetro = 2(7 + 10) = 34."},{"type":"ne","topic":"Conteo: múltiplos","difficulty":"difícil","stem":"How many integers from 1 to 100, inclusive, are multiples of 3 or multiples of 5 (or both)?","answer":"47","solution":"1) Múltiplos de 3: 33. Múltiplos de 5: 20.\n2) Múltiplos de 15 (contados dos veces): 6.\n3) Total = 33 + 20 − 6 = 47.\nPor qué no 53: olvidar restar la intersección."},{"type":"ne","topic":"Probabilidad: monedas","difficulty":"media","stem":"A fair coin is flipped 3 times. What is the probability of getting exactly 2 heads? Give your answer as a fraction.","answer":"3/8","solution":"1) Total de resultados: 2³ = 8.\n2) Exactamente 2 caras: HHT, HTH, THH → 3.\n3) P = 3/8."},{"type":"ne","topic":"Identidades algebraicas","difficulty":"difícil","stem":"If x + 1/x = 5, what is the value of x² + 1/x²?","answer":"23","solution":"1) Eleva al cuadrado: (x + 1/x)² = x² + 2 + 1/x² = 25.\n2) x² + 1/x² = 25 − 2 = 23.\nPor qué no 25: el término cruzado 2·x·(1/x) = 2 debe restarse."},{"type":"ne","topic":"Proporciones: precio","difficulty":"media","stem":"A store sells pens at a price of 3 pens for $2. At this rate, how many dollars would 27 pens cost?","answer":"18","solution":"1) 27 pens = 9 grupos de 3.\n2) 9 × $2 = $18."},{"type":"ne","topic":"Polígonos","difficulty":"media","stem":"What is the sum, in degrees, of the interior angles of a hexagon?","answer":"720","solution":"1) Suma = (n − 2) × 180.\n2) (6 − 2) × 180 = 720."},{"type":"ne","topic":"Tasas de trabajo","difficulty":"media","stem":"Working at the same constant rate, 5 workers produce 60 parts in 4 hours. At this rate, how many parts would 8 workers produce in 6 hours?","answer":"144","solution":"1) Tasa por trabajador-hora = 60/(5 × 4) = 3 piezas.\n2) 8 trabajadores × 6 horas × 3 = 144."},{"type":"ne","topic":"Geometría analítica: distancia","difficulty":"media","stem":"What is the distance between the points (−2, 3) and (4, −5) in the xy-plane?","answer":"10","solution":"1) Δx = 6, Δy = −8.\n2) Distancia = √(36 + 64) = √100 = 10.\nEstrategia GRE: reconoce el triángulo 6-8-10 (múltiplo de 3-4-5)."},{"type":"ne","topic":"Crecimiento porcentual","difficulty":"difícil","stem":"A town's population grew from 2,000 to 2,420 over two years, increasing by the same percent each year. What was the annual percent increase? (Enter the number of percent.)","answer":"10","solution":"1) 2,420/2,000 = 1.21.\n2) (1 + r)² = 1.21 → 1 + r = 1.1 → r = 10%.\nPor qué no 10.5: dividir el 21% total entre dos años ignora el efecto compuesto."},{"type":"ne","topic":"Estadística: mediana","difficulty":"media","stem":"What is the median of the following numbers?\n12, 5, 9, 21, 7, 15","answer":"10.5","solution":"1) Ordena: 5, 7, 9, 12, 15, 21.\n2) Con seis valores, mediana = promedio de los dos centrales: (9 + 12)/2 = 10.5."},{"type":"ne","topic":"Porcentajes ponderados","difficulty":"difícil","stem":"In a class, 60 percent of the students are women. If 25 percent of the women and 50 percent of the men in the class wear glasses, what percent of the students in the class wear glasses? (Enter the number of percent.)","answer":"35","solution":"1) Mujeres con lentes: 0.25 × 60% = 15%.\n2) Hombres (40%) con lentes: 0.50 × 40% = 20%.\n3) Total = 35%.\nPor qué no 37.5: promediar 25% y 50% ignora que hay más mujeres."},{"type":"ne","topic":"Geometría: cubos","difficulty":"media","stem":"The volume of a cube is 64. What is the total surface area of the cube?","answer":"96","solution":"1) Lado = ∛64 = 4.\n2) Área total = 6 × 4² = 96."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"media","stem":"Although the scientist's early papers were dismissed as _____, her later work vindicated many of her once-controversial claims.","blanks":[["speculative","rigorous","derivative","lucrative","concise"]],"answer":[0],"solution":"1) \"Although\" marca contraste: los primeros trabajos fueron descartados, pero luego se le dio la razón.\n2) Se descartan ideas por ser no comprobadas → speculative (especulativos).\nPor qué no rigorous: un trabajo riguroso no se descarta; rompe el contraste.\nEstrategia GRE: pon tu propia palabra en el espacio antes de ver las opciones."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"media","stem":"The senator's speech was so _____ that even her supporters struggled to identify a single concrete proposal in it.","blanks":[["incisive","vacuous","partisan","succinct","eloquent"]],"answer":[1],"solution":"1) La pista: nadie encontró una sola propuesta concreta.\n2) Un discurso vacío de contenido → vacuous.\nPor qué no eloquent: elocuente describe la forma, no explica la falta de contenido; incisive es lo contrario."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"media","stem":"Far from being _____, the new manager welcomed criticism and often changed course after hearing objections from her staff.","blanks":[["receptive","candid","gregarious","intransigent","diffident"]],"answer":[3],"solution":"1) \"Far from being X\" significa que es lo contrario de X.\n2) Ella acepta críticas y cambia de rumbo → X debe ser terca, inflexible → intransigent.\nPor qué no receptive: describe lo que sí es, no lo que \"lejos de ser\"."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"difícil","stem":"The documentary's portrayal of the explorer was hardly _____: it dwelt at length on his cruelty toward the guides who made his expeditions possible.","blanks":[["superficial","chronological","hagiographic","ambiguous","sardonic"]],"answer":[2],"solution":"1) \"Hardly X\" + se detiene en su crueldad → el retrato no es elogioso.\n2) Hagiographic = que idealiza a alguien como santo.\nPor qué no superficial: dedicar mucho tiempo a un tema no contradice ser superficial en otros aspectos; la pista es la crítica, no la profundidad."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"media","stem":"Because the evidence was largely _____, the committee declined to draw any firm conclusion from it.","blanks":[["conclusive","anecdotal","empirical","voluminous","contemporaneous"]],"answer":[1],"solution":"1) No sacaron conclusiones firmes por el tipo de evidencia.\n2) Evidencia basada en relatos sueltos, poco sistemática → anecdotal.\nPor qué no conclusive: sería razón para concluir, no para abstenerse."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"difícil","stem":"Critics who had expected the young novelist's second book to be as _____ as her first were surprised by its restraint and economy.","blanks":[["terse","laconic","plausible","florid","somber"]],"answer":[3],"solution":"1) La sorpresa es que el segundo libro es contenido y económico.\n2) Entonces el primero era lo contrario: recargado, adornado → florid.\nPor qué no terse o laconic: significan conciso, lo mismo que el segundo libro; no habría sorpresa."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"media","stem":"The historian warned that the archive's apparent completeness was _____: whole categories of documents had been quietly destroyed decades earlier.","blanks":[["authoritative","deliberate","intriguing","unprecedented","illusory"]],"answer":[4],"solution":"1) \"Apparent completeness\" + documentos destruidos → la completitud no es real.\n2) Illusory = ilusoria, engañosa.\nPor qué no deliberate: la destrucción fue deliberada, pero lo que se califica es la completitud."},{"type":"tc","topic":"Vocabulario en contexto","difficulty":"media","stem":"The museum's new director is no _____; she has spent thirty years studying the very collection she now oversees.","blanks":[["neophyte","scholar","curator","patron","skeptic"]],"answer":[0],"solution":"1) Treinta años estudiando la colección → tiene mucha experiencia.\n2) \"No X\" → X es alguien sin experiencia → neophyte (novata).\nPor qué no scholar: ella sí es una estudiosa; \"no scholar\" contradice la pista."},{"type":"tc","topic":"Dos espacios: tono y contenido","difficulty":"media","stem":"The committee's report, though _____ (i) in tone, was _____ (ii) in substance: it recommended dismantling the entire program.","blanks":[["strident","measured","jocular"],["timid","trivial","radical"]],"answer":[1,2],"solution":"1) Desmantelar todo el programa es una recomendación extrema → (ii) radical.\n2) \"Though\" pide contraste entre tono y contenido → tono moderado → (i) measured.\nPor qué no strident: un tono estridente no contrasta con un contenido radical.\nEstrategia GRE: empieza por el espacio que tenga la pista más clara."},{"type":"tc","topic":"Dos espacios: contraste","difficulty":"difícil","stem":"Many readers find the philosopher's prose _____ (i), yet those who persist discover that its difficulty is _____ (ii): each convoluted sentence turns out to be doing necessary work.","blanks":[["impenetrable","pellucid","pedestrian"],["gratuitous","warranted","feigned"]],"answer":[0,1],"solution":"1) \"Its difficulty\" y \"those who persist\" → la prosa es difícil → (i) impenetrable.\n2) Cada oración hace un trabajo necesario → la dificultad está justificada → (ii) warranted.\nPor qué no gratuitous: significa innecesaria, lo contrario de la pista final; pellucid significa clarísima."},{"type":"tc","topic":"Dos espacios: cambio de opinión","difficulty":"media","stem":"Early reviewers _____ (i) the film, but audiences embraced it, and within a decade critics who had once dismissed it were _____ (ii) its virtues.","blanks":[["lauded","anticipated","panned"],["extolling","questioning","concealing"]],"answer":[2,0],"solution":"1) \"Critics who had once dismissed it\" → al inicio la criticaron → (i) panned.\n2) Una década después cambiaron de opinión → alabaron sus virtudes → (ii) extolling.\nPor qué no lauded: contradice \"dismissed\"."},{"type":"tc","topic":"Dos espacios: causa y efecto","difficulty":"media","stem":"The species was long thought to be _____ (i), but recent surveys have found thriving populations in several _____ (ii) valleys that researchers had simply never visited.","blanks":[["ubiquitous","extinct","invasive"],["remote","crowded","cultivated"]],"answer":[1,0],"solution":"1) \"But ... thriving populations\" → antes se creía que no existía → (i) extinct.\n2) Valles que nadie había visitado → aislados → (ii) remote.\nPor qué no ubiquitous: si fuera omnipresente, encontrar poblaciones no sería sorpresa."},{"type":"tc","topic":"Dos espacios: expectativa","difficulty":"difícil","stem":"Her reputation for _____ (i) made the minister's sudden evasiveness all the more _____ (ii) to reporters.","blanks":[["candor","secrecy","frivolity"],["predictable","conspicuous","tedious"]],"answer":[0,1],"solution":"1) \"All the more\" + evasiva indica contraste con su reputación → era conocida por franqueza → (i) candor.\n2) Si siempre era franca, su evasiva resaltó → (ii) conspicuous.\nPor qué no secrecy + predictable: es coherente, pero \"sudden\" indica que la evasiva fue inesperada."},{"type":"tc","topic":"Dos espacios: definición","difficulty":"difícil","stem":"The theory's appeal lay in its _____ (i): it explained a wide range of phenomena with a single principle, though critics argued that this simplicity came at the cost of _____ (ii).","blanks":[["parsimony","obscurity","novelty"],["brevity","accuracy","elegance"]],"answer":[0,1],"solution":"1) Explicar mucho con un solo principio = economía explicativa → (i) parsimony.\n2) El costo de la simplicidad suele ser perder precisión → (ii) accuracy.\nPor qué no elegance: la elegancia es parte del atractivo, no su costo."},{"type":"tc","topic":"Dos espacios: giro","difficulty":"media","stem":"The negotiations, which had seemed _____ (i) only a week earlier, collapsed abruptly when one delegation _____ (ii) a demand it had previously agreed to drop.","blanks":[["doomed","promising","irrelevant"],["reintroduced","abandoned","clarified"]],"answer":[1,0],"solution":"1) \"Collapsed abruptly\" sugiere que antes iban bien → (i) promising.\n2) Una exigencia que habían aceptado abandonar volvió a aparecer → (ii) reintroduced.\nPor qué no abandoned: abandonar la exigencia no haría fracasar la negociación."},{"type":"tc","topic":"Tres espacios","difficulty":"difícil","stem":"The professor's lectures were notoriously _____ (i); she would begin with a question about medieval trade, _____ (ii) into anecdotes about her own travels, and only rarely _____ (iii) to the topic announced on the syllabus.","blanks":[["rigorous","digressive","succinct"],["condense","ascend","wander"],["object","return","reduce"]],"answer":[1,2,1],"solution":"1) Empieza con un tema, se desvía a anécdotas → (i) digressive.\n2) Se desvía hacia anécdotas → (ii) wander.\n3) Rara vez vuelve al tema → (iii) return.\nPor qué no rigorous o succinct: ambos contradicen el patrón de divagar."},{"type":"tc","topic":"Tres espacios","difficulty":"difícil","stem":"Although the merger was presented to employees as a _____ (i) of equals, the subsequent departure of nearly every senior executive from the smaller firm suggested that it was in fact a _____ (ii); few observers were _____ (iii) when the smaller firm's name disappeared entirely the following year.","blanks":[["rivalry","partnership","dissolution"],["compromise","coincidence","takeover"],["surprised","consulted","relieved"]],"answer":[1,2,0],"solution":"1) Se presentó como algo entre iguales → (i) partnership.\n2) \"Although\" + salida de ejecutivos de la empresa pequeña → en realidad la grande la absorbió → (ii) takeover.\n3) Si ya era una absorción, que desapareciera el nombre no sorprendió → (iii) surprised.\nPor qué no relieved: el texto no da pistas de alivio; habla de lo esperable."},{"type":"tc","topic":"Tres espacios","difficulty":"difícil","stem":"Scientific consensus is rarely _____ (i); it typically emerges _____ (ii), as competing explanations are tested and discarded, so that by the time a textbook _____ (iii) a finding, the debate over it may be decades old.","blanks":[["instantaneous","provisional","contested"],["abruptly","incrementally","arbitrarily"],["enshrines","refutes","anticipates"]],"answer":[0,1,0],"solution":"1) El consenso surge poco a poco → rara vez es inmediato → (i) instantaneous.\n2) Se prueban y descartan explicaciones → avanza gradualmente → (ii) incrementally.\n3) Cuando un libro de texto consagra el hallazgo, el debate ya es viejo → (iii) enshrines.\nPor qué no refutes: el libro de texto adopta el consenso, no lo refuta."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"Despite the coach's _____ assurances, the team's owners began quietly interviewing replacements.","options":["repeated","confident","ironic","sanguine","belated","tentative"],"answer":[1,3],"solution":"1) \"Despite\" → las garantías del entrenador eran optimistas, pero los dueños igual buscaban reemplazo.\n2) Confident y sanguine (optimista) producen el mismo sentido.\nPor qué no repeated: encaja, pero no tiene sinónimo entre las opciones.\nEstrategia GRE: busca el par de palabras que den oraciones con el mismo significado."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"The essay's argument is _____: each paragraph seems to contradict the one before it.","options":["incoherent","persuasive","inconsistent","derivative","tendentious","concise"],"answer":[0,2],"solution":"1) Cada párrafo contradice al anterior → el argumento no se sostiene.\n2) Incoherent e inconsistent.\nPor qué no tendentious: significa sesgado, no contradictorio."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"Known for her _____, the diplomat could defuse even the most heated disputes.","options":["tact","wealth","ambition","discretion","stubbornness","eloquence"],"answer":[0,3],"solution":"1) Calmar disputas requiere delicadeza y prudencia.\n2) Tact y discretion.\nPor qué no eloquence: podría ayudar, pero no tiene par equivalente; stubbornness empeoraría las disputas."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"difícil","stem":"The once-thriving port town has become _____, its warehouses empty and its streets largely deserted.","options":["moribund","picturesque","notorious","cosmopolitan","declining","prosperous"],"answer":[0,4],"solution":"1) \"Once-thriving\" + almacenes vacíos → el pueblo decae.\n2) Moribund (agonizante) y declining (en declive).\nPor qué no picturesque: no se relaciona con la decadencia descrita."},{"type":"se","topic":"Equivalencia: tono","difficulty":"media","stem":"The author's tone throughout the memoir is _____, as though she were recounting events that had happened to someone else.","options":["detached","bitter","impassive","nostalgic","effusive","sentimental"],"answer":[0,2],"solution":"1) Como si le hubiera pasado a otra persona → tono distante, sin emoción.\n2) Detached e impassive.\nPor qué no nostalgic o sentimental: implican emoción personal, lo contrario de la pista."},{"type":"se","topic":"Equivalencia: contraste","difficulty":"media","stem":"Though he claimed to be _____ about the outcome, the candidate checked the vote count every few minutes.","options":["indifferent","anxious","optimistic","nonchalant","curious","ecstatic"],"answer":[0,3],"solution":"1) \"Though\" → afirmaba algo contrario a revisar el conteo a cada rato.\n2) Decía no importarle → indifferent y nonchalant.\nPor qué no anxious: describe su conducta real, no lo que afirmaba."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"The proposal was criticized as _____, since it addressed the symptoms of the problem while ignoring its causes.","options":["expensive","radical","superficial","unpopular","cursory","ambitious"],"answer":[2,4],"solution":"1) Atender síntomas e ignorar causas → tratamiento poco profundo.\n2) Superficial y cursory.\nPor qué no radical: una propuesta radical iría a la raíz, lo contrario."},{"type":"se","topic":"Equivalencia: carácter","difficulty":"difícil","stem":"Her manner was so _____ that new acquaintances often mistook her shyness for arrogance.","options":["reserved","aloof","gregarious","effusive","garrulous","timid"],"answer":[0,1],"solution":"1) La timidez se confunde con arrogancia cuando alguien parece distante.\n2) Reserved y aloof.\nPor qué no timid: la timidez evidente no se confundiría con arrogancia; gregarious y garrulous son lo opuesto."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"The company's _____ spending during the boom years left it with little cushion when demand collapsed.","options":["prudent","profligate","extravagant","modest","strategic","sporadic"],"answer":[1,2],"solution":"1) Quedarse sin colchón implica gasto excesivo.\n2) Profligate y extravagant.\nPor qué no prudent o modest: habrían dejado reservas."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"The witness's account was _____, consistent in every detail with the physical evidence.","options":["dramatic","verbose","credible","ambiguous","hesitant","plausible"],"answer":[2,5],"solution":"1) Coincidir con la evidencia física hace creíble un testimonio.\n2) Credible y plausible.\nPor qué no dramatic: no tiene relación con la consistencia."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"Rather than _____ the critics, the director simply ignored them and began work on her next film.","options":["rebutting","refuting","praising","imitating","flattering","hiring"],"answer":[0,1],"solution":"1) \"Rather than\" contrasta con ignorar → responder a los críticos para contradecirlos.\n2) Rebutting y refuting.\nPor qué no praising o flattering: forman un par parecido, pero no son lo natural frente a críticos ignorados; la oración implica que la crítica pedía respuesta."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"The new regulations were intended to _____ the pollution that had plagued the river for decades.","options":["curb","document","check","publicize","worsen","study"],"answer":[0,2],"solution":"1) Las regulaciones buscan reducir la contaminación.\n2) Curb y check (en el sentido de frenar).\nPor qué no document o study: no detienen la contaminación."},{"type":"se","topic":"Equivalencia: contraste","difficulty":"difícil","stem":"The novelist's later works are marked by a _____ that contrasts sharply with the exuberance of her debut.","options":["playfulness","restraint","verbosity","whimsy","sobriety","ambition"],"answer":[1,4],"solution":"1) Contraste con exuberancia → contención, seriedad.\n2) Restraint y sobriety.\nPor qué no playfulness o whimsy: se parecen a la exuberancia; no contrastan."},{"type":"se","topic":"Equivalencia: sinónimos","difficulty":"media","stem":"The speaker's remarks were so _____ that the audience grew restless within minutes.","options":["tedious","provocative","insightful","monotonous","brief","humorous"],"answer":[0,3],"solution":"1) El público se inquieta → aburrimiento.\n2) Tedious y monotonous.\nPor qué no provocative: podría inquietar, pero no tiene sinónimo en las opciones."},{"type":"rc","pid":"P1","topic":"Lectura: idea principal","difficulty":"media","stem":"The passage is primarily concerned with","options":["arguing that the beak hypothesis has been conclusively disproven","describing two explanations for a biological ability and evidence bearing on them","explaining why migratory birds have difficulty navigating near cities","challenging the claim that birds can detect magnetic fields","proposing a new mechanism for magnetic sensing in birds"],"answer":1,"solution":"1) El texto presenta la hipótesis del pico y la del ojo, y la evidencia de cada una.\n2) Eso describe B.\nPor qué no A: el pico sufrió un revés, pero el texto no dice que esté refutado de forma concluyente.\nEstrategia GRE: la idea principal debe cubrir todo el texto, no un detalle."},{"type":"rc","pid":"P1","topic":"Lectura: detalle","difficulty":"media","stem":"According to the passage, the iron-rich cells in the upper beak","options":["transmit magnetic information through the trigeminal nerve","contain light-sensitive proteins","turned out to be immune cells unconnected to nerves","are disrupted by weak radio-frequency noise","are found only in migratory species"],"answer":2,"solution":"1) El segundo párrafo dice que se identificaron como células inmunes sin conexión con nervios.\nPor qué no A: eso es lo que proponía la hipótesis, no lo que se encontró."},{"type":"rc","pid":"P1","multi":true,"topic":"Lectura: inferencia","difficulty":"difícil","stem":"Which of the following can be inferred from the passage about the eye hypothesis?","options":["It predicts that magnetic orientation can be disrupted by weak radio-frequency noise.","It gains direct support from the finding that the beak cells are immune cells.","Its proponents can offer an explanation for why a fragile sense might nevertheless have evolved."],"answer":[0,2],"solution":"1) A ✓: el texto dice que la hipótesis del ojo hace esa predicción.\n2) B ✗: ese hallazgo debilita la hipótesis del pico, pero el texto no dice que respalde directamente la del ojo.\n3) C ✓: la última oración explica que antes casi no había ruido de radiofrecuencia.\nEstrategia GRE: en \"selecciona todas\", evalúa cada opción por separado."},{"type":"rc","pid":"P2","topic":"Lectura: propósito","difficulty":"media","stem":"The author's primary purpose is to","options":["defend Hardin's recommendation that common resources be privatized","compare irrigation systems in Switzerland and the Philippines","argue that common ownership is superior to private ownership","describe how a scholar qualified a widely accepted conclusion","explain why monitoring is the most important condition for managing shared resources"],"answer":3,"solution":"1) El texto presenta la conclusión de Hardin y cómo Ostrom la matizó al cuestionar sus supuestos.\nPor qué no C: el autor aclara que Ostrom no mostró que la propiedad común siempre funcione."},{"type":"rc","pid":"P2","topic":"Lectura: detalle","difficulty":"media","stem":"According to the passage, Ostrom's challenge to Hardin consisted mainly in","options":["showing that Hardin's reasoning contained a logical error","arguing that state control is more effective than privatization","questioning the assumptions on which his model was based","demonstrating that all common resources can be sustained indefinitely","proving that resource users always communicate with one another"],"answer":2,"solution":"1) El texto dice que no disputó la lógica de Hardin, sino sus premisas.\nPor qué no A: contradice directamente el texto.\nPor qué no E: el texto dice \"frequently\", no \"always\"."},{"type":"rc","pid":"P2","multi":true,"topic":"Lectura: inferencia","difficulty":"difícil","stem":"The passage suggests which of the following about the cases Ostrom studied?","options":["Some involved shared resources that were not sustained successfully.","They included resources that users had managed for very long periods.","They showed that graduated sanctions are unnecessary when boundaries are clearly defined."],"answer":[0,1],"solution":"1) A ✓: \"many of her cases were failures\".\n2) B ✓: recursos sostenidos \"for centuries\".\n3) C ✗: las sanciones graduales aparecen como una de las condiciones de éxito, no como innecesarias."},{"type":"rc","pid":"P2","topic":"Lectura: vocabulario en contexto","difficulty":"media","stem":"In the context in which it appears, \"contingent\" most nearly means","options":["inevitable","dependent on circumstances","temporary","accidental","widely disputed"],"answer":1,"solution":"1) Ostrom mostró que el resultado depende de condiciones (límites, reglas, monitoreo).\n2) Contingent = que depende de las circunstancias.\nPor qué no D: \"accidental\" es otro sentido de la palabra, pero aquí el resultado depende de condiciones identificables, no del azar."},{"type":"rc","pid":"P3","topic":"Lectura: actitud del autor","difficulty":"media","stem":"The author's attitude toward \"the familiar story of embattled outsiders\" is best described as","options":["wholehearted endorsement","amused indifference","outright contempt","qualified skepticism","reluctant acceptance"],"answer":3,"solution":"1) El autor acepta que hubo una ruptura \"in one sense\", pero dice que la historia exagera.\n2) Eso es escepticismo matizado.\nPor qué no C: el autor reconoce parte de verdad; no la desprecia."},{"type":"rc","pid":"P3","topic":"Lectura: detalle","difficulty":"media","stem":"According to the passage, the oil sketch was","options":["a genre invented by the Impressionists","a preparatory exercise long required in academic training","forbidden by the official Salon","characterized by historical subjects","rarely practiced before the 1870s"],"answer":1,"solution":"1) El texto dice que los maestros académicos lo exigían como ejercicio preparatorio.\nPor qué no A: los impresionistas no lo inventaron; lo exhibieron como obra terminada."},{"type":"rc","pid":"P3","multi":true,"topic":"Lectura: inferencia","difficulty":"difícil","stem":"It can be inferred that the author would agree with which of the following statements?","options":["The Impressionists' rejection of academic subject matter was genuine.","The Impressionists' treatment of light had roots in academic practice.","The Impressionists developed a painting technique unknown to academic painters."],"answer":[0,1],"solution":"1) A ✓: \"in one sense it was\" un rechazo real de temas, superficies e iluminación.\n2) B ✓: su atención a la luz debía mucho al boceto al óleo académico.\n3) C ✗: el autor dice que la innovación no fue una técnica nueva."},{"type":"rc","pid":"P4","topic":"Lectura: idea principal","difficulty":"media","stem":"The passage is primarily concerned with","options":["refuting the claim that sleep benefits memory","describing techniques for improving recall","evaluating two explanations for an observed effect","explaining the phases of slow-wave sleep","arguing that interference has no effect on memory"],"answer":2,"solution":"1) El texto presenta la explicación pasiva y la activa, y evalúa evidencia para cada una.\nPor qué no A: el texto da por hecho que el sueño ayuda a la memoria."},{"type":"rc","pid":"P4","topic":"Lectura: función","difficulty":"difícil","stem":"The author mentions \"a period of quiet wakefulness without new input\" primarily in order to","options":["suggest that rest is preferable to sleep for learning","show that replay can occur while a person is awake","refute the active account of memory consolidation","explain why people remember less after waking","identify a condition under which the passive account predicts the same benefit as sleep"],"answer":4,"solution":"1) Si el sueño solo evita interferencias, la vigilia tranquila debería ayudar igual.\n2) El autor la usa como condición de prueba para distinguir las dos explicaciones.\nPor qué no C: el resultado favorece la explicación activa, pero la mención en sí define la prueba."},{"type":"rc","pid":"P4","multi":true,"topic":"Lectura: afirmaciones respaldadas","difficulty":"difícil","stem":"Which of the following statements are supported by the passage?","options":["Quiet wakefulness without new input improves memory to some degree.","Playing a cue during sleep improved recall of all learned material equally.","The author considers the passive account to have been conclusively disproven."],"answer":[0],"solution":"1) A ✓: \"quiet wakefulness does help—but not as much\".\n2) B ✗: la mejora fue selectiva para el material asociado al sonido.\n3) C ✗: \"Neither finding refutes the passive account outright\"."},{"type":"rc","pid":"P5","topic":"Argumentos: debilitar","difficulty":"media","stem":"Which of the following, if true, most seriously weakens the council's prediction?","options":["Streetlights cost less to operate than they did a decade ago.","The neighborhoods with more streetlights are also those with the highest household incomes and the most private security patrols.","Some burglaries in the city occur during the day.","Residents of the high-burglary neighborhoods support the proposal.","Burglary rates have declined citywide over the past five years."],"answer":1,"solution":"1) El consejo asume que las luces causan la baja de robos.\n2) B ofrece otra causa: esos barrios tienen más ingresos y patrullas privadas, que explicarían la menor tasa.\nPor qué no C: los robos de día no afectan una predicción sobre robos nocturnos.\nEstrategia GRE: para debilitar una causalidad, busca una causa alternativa."},{"type":"rc","pid":"P5","topic":"Argumentos: fortalecer","difficulty":"media","stem":"Which of the following, if true, most strengthens the council's prediction?","options":["Most residents of the city consider streetlights unattractive.","Burglars tend to operate in neighborhoods far from where they live.","The council has installed streetlights in other neighborhoods in the past.","In other cities, adding streetlights to high-burglary areas was followed by declines in nighttime burglary not seen in comparable areas without new lights.","Some streetlights in the city are frequently out of service."],"answer":3,"solution":"1) D muestra que, en condiciones comparables, agregar luces fue seguido de menos robos nocturnos.\n2) Eso apoya que las luces causan el efecto, no solo que se correlacionan.\nPor qué no C: que se hayan instalado antes no dice nada sobre el resultado."},{"type":"rc","pid":"P5","topic":"Argumentos: suposición","difficulty":"difícil","stem":"The council's prediction depends on which of the following assumptions?","options":["Residents of high-burglary neighborhoods are more likely to report crimes.","Nighttime burglary is the most common crime in the city.","The cost of new streetlights will be covered by the state.","Daytime burglary will not increase in the affected neighborhoods.","The lower burglary rates in well-lit neighborhoods are at least partly caused by the streetlights."],"answer":4,"solution":"1) La predicción pasa de una correlación (más luces, menos robos) a una causa.\n2) Si la luz no causa nada, agregar luces no reduciría los robos → E es la suposición necesaria.\nPor qué no D: la predicción habla solo de robos nocturnos.\nEstrategia GRE: niega la opción; si el argumento se cae, es la suposición."},{"type":"rc","pid":"P6","topic":"Lectura: propósito","difficulty":"media","stem":"The primary purpose of the passage is to","options":["argue that Victorian novels are more realistic than modern ones","explain the effects of serial publication on Victorian plots","criticize Victorian readers for preferring suspense to plausibility","trace the decline of religious belief in the nineteenth century","offer an alternative interpretation of a feature commonly regarded as a flaw"],"answer":4,"solution":"1) Las coincidencias suelen verse como defecto; el autor propone leerlas como expresión de la idea de providencia.\nPor qué no B: la publicación por entregas es la explicación de otros críticos, no el foco del autor."},{"type":"rc","pid":"P6","topic":"Lectura: inferencia","difficulty":"difícil","stem":"The author would most likely agree that the modern critics mentioned in the passage","options":["underestimate the influence of serial publication","are correct that coincidences are lapses of craft","have ignored Victorian fiction entirely","apply a standard that the novelists may not have shared","share the Victorians' belief in providence"],"answer":3,"solution":"1) La última oración dice que esos críticos juzgan con un realismo que los novelistas quizá no buscaban.\nPor qué no B: el autor cuestiona precisamente esa idea."},{"type":"rc","pid":"P6","multi":true,"topic":"Lectura: detalle","difficulty":"media","stem":"According to the passage, modern critics have attributed Victorian coincidences to which of the following?","options":["The demands of serial publication","A reading public that valued suspense over plausibility","A belief in providence"],"answer":[0,1],"solution":"1) A ✓ y B ✓: el texto las presenta como explicaciones de los críticos modernos.\n2) C ✗: la providencia es la interpretación alternativa del autor, no la de esos críticos."}]};
+/* ---------------- local storage ---------------- */
+const LS = 'gre-diario-v2';
+const DEFAULTS = { days:[0,1,2,3,4,5,6], perDay:10, quantPct:50, types:['qc','mc','ms','ne','tc','se','rc'], difficulty:'mixta', timed:true, focus:'' };
+function loadDB(){ let d; try{ d = JSON.parse(localStorage.getItem(LS)) || {}; }catch(e){ d = {}; }
+  d.settings = Object.assign(clone(DEFAULTS), d.settings || {}); d.sets = d.sets || {}; d.extra = d.extra || []; d.seen = d.seen || {}; return d; }
+let DB = loadDB();
+let storageOK = true;
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(DB)); storageOK = true; }catch(e){ if(storageOK) toast('No se pudo guardar en este dispositivo.'); storageOK = false; } }
+
+/* ---------------- bank ---------------- */
+const BASE = (function(){ const out = []; const P = BANK.passages || {};
+  (BANK.items || []).forEach((it, i) => { const q = Object.assign({}, it); if(q.pid && P[q.pid]) q.passage = P[q.pid]; q.id = 'b' + String(i+1).padStart(3,'0'); out.push(normalizeItem(q)); });
+  return out; })();
+function allItems(){ return BASE.concat(DB.extra); }
+function groupKey(q){ if(q.type !== 'rc') return q.id; if(q.pid) return 'p:' + q.pid; let hsh = 0; const s = q.passage || ''; for(let i=0;i<s.length;i++){ hsh = (hsh*31 + s.charCodeAt(i)) | 0; } return 'h:' + hsh; }
+function stemKey(q){ return norm((q.passage||'').slice(0,60) + '|' + (q.stem||'') + '|' + (q.quantityA||'') + '|' + (q.quantityB||'')); }
+function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); }
+
+/* ---------------- state ---------------- */
+const S = { sample:null, view:'home', tab:'home', run:null, resultsId:null, onlyWrong:false, gen:{busy:false,msg:'',pct:0,err:'',ctl:null}, packCount:20, importMsg:null };
+
+/* ---------------- schedule & selection ---------------- */
+function setsSorted(){ return Object.entries(DB.sets).map(([id,x]) => Object.assign({id}, x)).sort((a,b) => (b.date + (b.createdAt||'')).localeCompare(a.date + (a.createdAt||''))); }
+function isScheduled(d){ return DB.settings.days.includes(d.getDay()); }
+function setMinutes(qs){ return Math.round(qs.reduce((a,q) => a + (TYPES[q.type].sec === 'Q' ? 105 : 90), 0) / 60); }
+function scoreOf(set){ const qs = set.questions || []; let c = 0, cq = 0, tq = 0, cv = 0, tv = 0;
+  qs.forEach((q,i) => { const ok = isCorrect(q, (set.answers||{})[i]); if(ok) c++; if(TYPES[q.type].sec === 'Q'){ tq++; if(ok) cq++; } else { tv++; if(ok) cv++; } });
+  return {c, t:qs.length, cq, tq, cv, tv}; }
+function missedTopics(){
+  const cnt = {};
+  setsSorted().filter(s => s.status === 'done').slice(0, 10).forEach(s => (s.questions||[]).forEach((q,i) => { if(!isCorrect(q, (s.answers||{})[i]) && q.topic) cnt[q.topic] = (cnt[q.topic]||0) + 1; }));
+  return Object.entries(cnt).sort((a,b) => b[1]-a[1]).slice(0, 6).map(x => x[0]);
+}
+function poolFor(sec){
+  const st = DB.settings;
+  return allItems().filter(q => TYPES[q.type].sec === sec && st.types.includes(q.type) && (st.difficulty === 'mixta' || norm(q.difficulty) === (st.difficulty === 'dificil' ? 'dificil' : 'media')));
+}
+function unseenCount(sec){ return poolFor(sec).filter(q => !DB.seen[q.id]).length; }
+function pickUnits(sec, n){
+  if(n <= 0) return [];
+  const weak = new Set(missedTopics()); const focus = norm(DB.settings.focus);
+  const units = {};
+  for(const q of poolFor(sec)){ const k = groupKey(q); (units[k] = units[k] || []).push(q); }
+  const scored = Object.values(units).map(items => {
+    const fresh = items.filter(q => !DB.seen[q.id]);
+    const missed = items.filter(q => DB.seen[q.id] && DB.seen[q.id].ok === false);
+    const use = fresh.length ? fresh : (missed.length ? missed : items);
+    let score = fresh.length ? 1000 : missed.length ? 500 : 0;
+    if(use.some(q => weak.has(q.topic))) score += 60;
+    if(focus && use.some(q => focus.split(/[,;]/).some(f => f.trim() && norm(q.topic).includes(f.trim())))) score += 80;
+    if(!fresh.length) score -= Math.min(400, use.reduce((a,q) => a + ((DB.seen[q.id]||{}).n||0), 0) * 20);
+    return {use, score: score + Math.random() * 50};
+  }).sort((a,b) => b.score - a.score);
+  const out = [];
+  for(const u of scored){ if(out.length >= n) break; out.push(...u.use.slice(0, n - out.length)); }
+  return out;
+}
+function buildSet(date, extra){
+  const st = DB.settings; const n = Math.max(1, Math.min(40, st.perDay|0));
+  const hasQ = st.types.some(t => TYPES[t].sec === 'Q'), hasV = st.types.some(t => TYPES[t].sec === 'V');
+  if(!hasQ && !hasV){ toast('Activa al menos un tipo de ejercicio en Ajustes.'); return null; }
+  let nq = hasQ ? (hasV ? Math.round(n * st.quantPct / 100) : n) : 0; const nv = n - nq;
+  const qs = pickUnits('Q', nq).concat(pickUnits('V', nv));
+  if(!qs.length){ toast('No hay ejercicios con esos ajustes. Revisa tipos y dificultad.'); return null; }
+  const id = 'set-' + date + (extra ? '-x' + Date.now().toString(36) : '');
+  DB.sets[id] = {date, createdAt:new Date().toISOString(), status:'pending', questions:clone(qs), answers:{}, idx:0, extra:!!extra};
+  save(); return id;
+}
+function ensureToday(){
+  const today = dkey();
+  if(isScheduled(new Date()) && !Object.values(DB.sets).some(s => s.date === today && !s.extra)) buildSet(today, false);
+}
+
+/* ---------------- render shell ---------------- */
+const ICON = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  hist:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
+  bank:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v4H4zM4 11h16v4H4zM4 17h16v3H4z"/></svg>',
+  set:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>'
+};
+function icon(n){ const s = document.createElement('span'); s.innerHTML = ICON[n]; return s.firstChild; }
+function render(){ app.replaceChildren(root()); if(S.view === 'run' && S.run && S.run.calcOpen) mountCalc(); else removeCalc(); }
+function renderKeep(){ const m = document.querySelector('.main'); const y = m ? m.scrollTop : 0; render(); const m2 = document.querySelector('.main'); if(m2) m2.scrollTop = y; }
+function root(){
+  if(S.view === 'run') return runView();
+  if(S.view === 'results') return resultsView();
+  let body, title, sub;
+  if(S.tab === 'home'){ body = homeView(); title = 'GRE diario'; sub = new Date().toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'long'}); }
+  else if(S.tab === 'hist'){ body = histView(); title = 'Tu progreso'; sub = 'Historial y temas a reforzar'; }
+  else if(S.tab === 'bank'){ body = bankView(); title = 'Banco de ejercicios'; sub = 'Lo que tienes y cómo agregar más'; }
+  else { body = settingsView(); title = 'Ajustes'; sub = 'Frecuencia, volumen y tipo de ejercicios'; }
+  return h('div',{class:'shell'},
+    h('header',{class:'head'}, h('h1',{text:title}), h('p',{text:sub})),
+    h('main',{class:'main'}, h('div',{class:'wrap'}, body)),
+    h('nav',{class:'nav'}, [['home','Hoy'],['hist','Progreso'],['bank','Banco'],['set','Ajustes']].map(([k,l]) =>
+      h('button',{'aria-current': S.tab===k ? 'page' : null, onclick:()=>{ S.tab = k; render(); const m = document.querySelector('.main'); if(m) m.scrollTop = 0; }}, icon(k), h('span',{text:l})))));
+}
+
+/* ---------------- home ---------------- */
+function homeView(){
+  ensureToday();
+  const today = dkey(); const all = setsSorted();
+  const pending = all.filter(s => s.status !== 'done' && s.date <= today).sort((a,b) => a.date.localeCompare(b.date));
+  const doneToday = all.filter(s => s.status === 'done' && s.date === today);
+  const kids = [];
+  if(!storageOK) kids.push(h('div',{class:'notice err',text:'Este navegador no permite guardar tu progreso. En Safari, desactiva la navegación privada.'}));
+  if(pending.length){
+    const s = pending[0];
+    kids.push(h('div',{class:'card'},
+      h('div',{class:'muted small',text: s.date === today ? (s.extra ? 'Set extra' : 'Tu set de hoy') : 'Set pendiente de ' + dlabel(s.date).toLowerCase()}),
+      h('div',{class:'big',style:'margin:6px 0',text:`${s.questions.length} ejercicios`}),
+      h('p',{class:'muted',style:'margin:0 0 14px',text:`${s.questions.filter(q=>TYPES[q.type].sec==='Q').length} cuantitativos · ${s.questions.filter(q=>TYPES[q.type].sec==='V').length} verbales · unos ${setMinutes(s.questions)} min`}),
+      h('button',{class:'btn primary block',text: s.status === 'in_progress' ? 'Continuar' : 'Empezar', onclick:()=>startRun(s.id)})));
+    if(pending.length > 1) kids.push(h('p',{class:'small muted',text:`Tienes ${pending.length - 1} set(s) pendiente(s) más.`}));
+  } else if(doneToday.length){
+    const s = doneToday[0]; const sc = scoreOf(s);
+    kids.push(h('div',{class:'card'},
+      h('div',{class:'muted small',text:'Hoy ya practicaste'}),
+      h('div',{class:'big',style:'margin:6px 0',text:`${sc.c} / ${sc.t}`}),
+      h('button',{class:'btn block',text:'Ver respuestas y procedimiento',onclick:()=>openResults(s.id)})));
+  } else {
+    kids.push(h('div',{class:'card'}, h('h2',{text:'Hoy es día de descanso'}), h('p',{class:'muted',style:'margin:0',text:'Según tus ajustes, hoy no toca práctica.'})));
+  }
+  if(!pending.length) kids.push(h('button',{class:'btn block',style:'margin-bottom:14px',text:'Practicar un set extra ahora',onclick:()=>{ const id = buildSet(today, true); if(id) startRun(id); }}));
+  const uq = unseenCount('Q'), uv = unseenCount('V');
+  if(uq + uv < DB.settings.perDay * 3) kids.push(h('div',{class:'notice warn'}, `Te quedan ${uq + uv} ejercicios nuevos (${uq} cuantitativos, ${uv} verbales). `, h('button',{class:'btn link',style:'padding:0',text:'Agregar más',onclick:()=>{ S.tab = 'bank'; render(); }})));
+  const st = statsOf();
+  if(st.sets) kids.push(h('div',{class:'card'}, h('h2',{text:'Resumen'}),
+    h('div',{class:'stat'}, h('div',null,h('strong',{text:st.pct+'%'}),h('span',{text:'aciertos totales'})), h('div',null,h('strong',{text:st.pq==null?'—':st.pq+'%'}),h('span',{text:'cuantitativo'})), h('div',null,h('strong',{text:st.pv==null?'—':st.pv+'%'}),h('span',{text:'verbal'}))),
+    h('p',{class:'small muted',style:'margin:10px 0 0',text:`${st.sets} sesiones · racha de ${st.streak} día(s)`})));
+  return kids;
+}
+
+/* ---------------- adding questions ---------------- */
+const SPEC = `ITEM JSON FORMAT (one object per item):
+{"type": "qc" | "mc" | "ms" | "ne" | "tc" | "se" | "rc",
+ "topic": short topic label in Spanish (e.g. "Porcentajes", "Geometría: triángulos", "Vocabulario en contexto", "Lectura: inferencia"),
+ "difficulty": "media" | "difícil",
+ "passage": reading passage (rc only; repeat the full passage in every item that uses it),
+ "stem": the question text ("" allowed only for qc),
+ "info": centered given information (qc only, else ""),
+ "quantityA": "...", "quantityB": "..." (qc only),
+ "options": answer choices (mc: exactly 5; ms: 3 to 7; se: exactly 6; rc single: exactly 5; rc multi: exactly 3; qc/ne/tc: []),
+ "blanks": choices per blank (tc only: 1 blank → [[5 choices]]; 2 or 3 blanks → 3 choices each),
+ "multi": true only for rc "select all that apply" items,
+ "answer": qc/mc/rc-single → 0-based index; ms/se/rc-multi → array of 0-based indices; tc → array with one 0-based index per blank; ne → exact number as a string ("12", "0.75", "3/4"),
+ "tolerance": "" (ne only, if rounding is asked),
+ "solution": step-by-step procedure in SPANISH}
+qc answer codes: 0 = Quantity A is greater, 1 = Quantity B is greater, 2 = equal, 3 = the relationship cannot be determined.`;
+function packPrompt(count){
+  const st = DB.settings; const hasQ = st.types.some(t => TYPES[t].sec === 'Q'), hasV = st.types.some(t => TYPES[t].sec === 'V');
+  const nq = hasQ ? (hasV ? Math.round(count * st.quantPct / 100) : count) : 0, nv = count - nq;
+  const names = {qc:'Quantitative Comparison', mc:'Multiple-choice, select one', ms:'Multiple-choice, select one or more', ne:'Numeric Entry', tc:'Text Completion (1–3 blanks)', se:'Sentence Equivalence', rc:'Reading Comprehension (incl. paragraph-argument items)'};
+  const weak = missedTopics();
+  const have = [...new Set(allItems().map(q => q.topic).filter(Boolean))].slice(0, 60);
+  const diff = st.difficulty === 'media' ? 'medium' : st.difficulty === 'dificil' ? 'hard (like the harder GRE second section)' : 'a realistic mix: about 30% easy-medium, 40% medium, 30% hard';
+  return `Act as a senior GRE General Test item writer who knows the official ETS specifications. Write ${count} ORIGINAL practice items (${nq} Quantitative Reasoning, ${nv} Verbal Reasoning) that mirror real GRE items in format, scope, wording and difficulty, without copying or paraphrasing published ETS items.
+
+Allowed types: ${st.types.map(t => t + ' = ' + names[t]).join('; ')}. Use a realistic GRE mix among them.
+Difficulty: ${diff}.
+Language: passages, stems and options in English, exactly as on the GRE. Solutions in Spanish.
+${st.focus ? 'Emphasize: ' + st.focus + '.\n' : ''}${weak.length ? 'I recently missed items on: ' + weak.join(', ') + '. Include several items on these.\n' : ''}Topics I already have plenty of (vary away from repeating them): ${have.join(', ')}.
+
+Rules:
+- Each item must have exactly one defensible key (for multi-answer types, exactly the keyed set). Solve every item twice by different methods before including it; drop any you are not fully sure of.
+- Text Completion: mark blanks "_____ (i)", "_____ (ii)", "_____ (iii)". Sentence Equivalence: exactly two choices that give sentences alike in meaning; no other pair may work.
+- Multi-answer quant items say "Indicate all such ..." in the stem.
+- Plain text only: x², √, π, ≤, ≥, ×, ÷, fractions as a/b. No LaTeX, no images; describe any figure in words.
+- solution (Spanish): numbered steps "1) … 2) …" with every calculation or reasoning step, then "Por qué no las otras:" for the most tempting wrong choice, and "Estrategia GRE:" when useful. Under 160 words.
+
+${SPEC}
+
+Reply with ONLY one JSON array inside a single \`\`\`json code block, nothing else.`;
+}
+function parsePack(text){
+  let t = String(text || '').trim(); if(!t) return {items:[], bad:0, dup:0, error:'Pega primero la respuesta de Claude.'};
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/); if(fence) t = fence[1];
+  let data = null; try{ data = JSON.parse(t); }catch(e){ const a = t.indexOf('['), b = t.lastIndexOf(']'); if(a >= 0 && b > a){ try{ data = JSON.parse(t.slice(a, b+1)); }catch(e2){} } }
+  if(data && !Array.isArray(data)) data = Array.isArray(data.items) ? data.items : null;
+  if(!Array.isArray(data)) return {items:[], bad:0, dup:0, error:'No encontré una lista de ejercicios en el texto. Copia la respuesta completa de Claude, incluido el bloque de código.'};
+  const known = new Set(allItems().map(stemKey)); const items = []; let bad = 0, dup = 0;
+  for(const raw of data){ let q; try{ q = normalizeItem(Object.assign({}, raw)); }catch(e){ bad++; continue; }
+    if(!validItem(q)){ bad++; continue; } const k = stemKey(q); if(known.has(k)){ dup++; continue; } known.add(k);
+    q.id = 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); delete q.pid; items.push(q); }
+  return {items, bad, dup};
+}
+function addToBank(items){ DB.extra = DB.extra.concat(items); save(); }
+async function copyText(t){ try{ await navigator.clipboard.writeText(t); return true; }catch(e){
+  const ta = h('textarea',{style:'position:fixed;top:0;left:0;opacity:0',value:t}); document.body.append(ta); ta.select(); let ok = false; try{ ok = document.execCommand('copy'); }catch(e2){} ta.remove(); return ok; } }
+
+function bankView(){
+  const all = allItems(); const byType = {}; all.forEach(q => { byType[q.type] = (byType[q.type]||0) + 1; });
+  const uq = unseenCount('Q'), uv = unseenCount('V');
+  const kids = [h('div',{class:'card'},
+    h('div',{class:'stat'}, h('div',null,h('strong',{text:String(all.length)}),h('span',{text:'ejercicios'})), h('div',null,h('strong',{text:String(uq)}),h('span',{text:'cuantitativos sin ver'})), h('div',null,h('strong',{text:String(uv)}),h('span',{text:'verbales sin ver'}))),
+    h('p',{class:'small muted',style:'margin:10px 0 0',text: Object.keys(TYPES).filter(k=>byType[k]).map(k => `${TYPES[k].name}: ${byType[k]}`).join(' · ')}),
+    DB.extra.length ? h('p',{class:'small muted',style:'margin:6px 0 0',text:`${DB.extra.length} agregados por ti.`}) : null)];
+  if(S.sample){
+    kids.push(h('div',{class:'card'}, h('h2',{text:'Generar aquí con Claude'}),
+      h('p',{class:'small muted',style:'margin:0 0 10px',text:'Estás dentro de Claude, así que puedo generar y verificar ejercicios sin salir de la app.'}),
+      S.gen.busy ? h('div',null, h('p',{class:'small',id:'genmsg',text:S.gen.msg}), h('div',{class:'progress'}, h('i',{id:'genbar',style:`width:${S.gen.pct}%`})), h('button',{class:'btn link',text:'Cancelar',onclick:()=>S.gen.ctl && S.gen.ctl.abort()}))
+        : h('button',{class:'btn primary block',text:`Generar ${S.packCount} ejercicios`,onclick:()=>generateHere(S.packCount)}),
+      S.gen.err ? h('div',{class:'notice err',text:S.gen.err}) : null));
+  }
+  const ta = h('textarea',{class:'input',style:'min-height:120px;font-size:.85rem',placeholder:'Pega aquí la respuesta completa de Claude'});
+  const fileIn = h('input',{type:'file',accept:'.json,.txt,application/json,text/plain',style:'display:none',onchange:async e=>{ const f = e.target.files && e.target.files[0]; if(!f) return; ta.value = await f.text(); doImport(); }});
+  const doImport = () => { const r = parsePack(ta.value);
+    if(r.error){ S.importMsg = {err:r.error}; }
+    else { if(r.items.length) addToBank(r.items); S.importMsg = {ok:`Agregados ${r.items.length} ejercicios.` + (r.dup ? ` ${r.dup} repetidos omitidos.` : '') + (r.bad ? ` ${r.bad} con formato inválido omitidos.` : '')}; if(r.items.length) ta.value = ''; }
+    renderKeep(); };
+  kids.push(h('div',{class:'card'}, h('h2',{text:'Pedir más a Claude'}),
+    h('p',{class:'small',style:'margin:0 0 10px',text:'1) Elige cuántos. 2) Copia las instrucciones y pégalas en un chat nuevo de Claude. 3) Copia su respuesta completa y pégala abajo.'}),
+    h('div',{class:'chips',style:'margin-bottom:10px'}, [10,20,30].map(n => h('button',{class:'chip','aria-pressed': S.packCount===n?'true':'false',text:String(n),onclick:()=>{ S.packCount = n; renderKeep(); }}))),
+    h('div',{class:'row'},
+      h('button',{class:'btn primary',text:'Copiar instrucciones',onclick:async()=>{ toast(await copyText(packPrompt(S.packCount)) ? 'Instrucciones copiadas. Pégalas en Claude.' : 'No se pudo copiar automáticamente.'); }}),
+      h('a',{class:'btn',href:'https://claude.ai/new',target:'_blank',rel:'noopener',style:'text-decoration:none;display:inline-flex;align-items:center',text:'Abrir Claude'})),
+    h('p',{class:'small muted',text:'Incluyen tus ajustes y los temas que más fallas, para que el paquete se adapte a ti.'}),
+    h('div',{class:'field'}, h('label',{text:'Respuesta de Claude'}), ta),
+    S.importMsg ? h('div',{class:'notice' + (S.importMsg.err ? ' err' : ''),text:S.importMsg.err || S.importMsg.ok}) : null,
+    h('div',{class:'row'}, h('button',{class:'btn primary',text:'Agregar al banco',onclick:doImport}), h('button',{class:'btn',text:'Desde archivo',onclick:()=>fileIn.click()}), fileIn)));
+  return kids;
+}
+const CHUNK = 6;
+async function generateHere(count){
+  if(S.gen.busy || !S.sample) return;
+  S.gen = {busy:true, msg:'Escribiendo ejercicios…', pct:5, err:'', ctl:new AbortController()}; renderKeep();
+  const chunks = []; let left = count; while(left > 0){ chunks.push(Math.min(CHUNK, left)); left -= CHUNK; }
+  let added = 0, dropped = 0;
+  try{
+    for(let ci = 0; ci < chunks.length; ci++){
+      const c = chunks[ci];
+      const setp = (m, p) => { S.gen.msg = m; S.gen.pct = p; const a = document.getElementById('genmsg'); if(a) a.textContent = m; const b = document.getElementById('genbar'); if(b) b.style.width = p + '%'; };
+      setp(`Escribiendo lote ${ci+1} de ${chunks.length}…`, 5 + Math.round(ci/chunks.length*90));
+      let raw = await S.sample.json(packPrompt(c + 2).replace(/Reply with ONLY one JSON array[\s\S]*$/, 'Reply with ONLY the JSON array.'), {modelTier:'complex', signal:S.gen.ctl.signal, cache:false});
+      const r = parsePack(JSON.stringify(Array.isArray(raw) ? raw : (raw && raw.items) || []));
+      setp(`Verificando lote ${ci+1} de ${chunks.length}…`, 5 + Math.round((ci+0.5)/chunks.length*90));
+      if(!r.items.length){ dropped += c; continue; }
+      let checks = await S.sample.json(verifyPrompt(r.items), {modelTier:'complex', signal:S.gen.ctl.signal, cache:false});
+      if(!Array.isArray(checks)) checks = [];
+      const byI = {}; checks.forEach(x => { if(x && Number.isInteger(x.i)) byI[x.i] = x.answer; });
+      const ok = r.items.filter((q,i) => keyMatches(q, byI[i])).slice(0, c);
+      dropped += r.items.length - ok.length; addToBank(ok); added += ok.length;
+    }
+    S.gen = {busy:false,msg:'',pct:0,err:'',ctl:null}; toast(`Agregados ${added} ejercicios verificados` + (dropped ? `; ${dropped} descartados.` : '.'));
+  }catch(e){ S.gen = {busy:false,msg:'',pct:0,err: e && e.code === 'cancelled' ? (added ? `Se agregaron ${added} antes de cancelar.` : '') : sampleErr(e),ctl:null}; }
+  if(S.view !== 'run') renderKeep();
+}
+function verifyPrompt(items){
+  const stripped = items.map((q,i) => { const o = {i, type:q.type}; for(const k of ['passage','info','quantityA','quantityB','stem','options','blanks','multi','tolerance']) if(q[k] != null && q[k] !== '' && !(Array.isArray(q[k]) && !q[k].length)) o[k] = q[k]; return o; });
+  return `You are checking GRE practice items before a student sees them. Solve each item independently and carefully. If an item is ambiguous, flawed, or has more than one defensible answer (beyond the keyed set for multi-answer types), return "flag".
+Encoding: qc/mc/rc-single → 0-based index (qc: 0 = A greater, 1 = B greater, 2 = equal, 3 = cannot be determined); ms/se/rc with multi=true → array of 0-based indices; tc → array with one index per blank; ne → exact number as a string.
+Items:
+${JSON.stringify(stripped)}
+Reply with ONLY a JSON array like [{"i":0,"answer":2},{"i":1,"answer":[0,3]}].`;
+}
+function sampleErr(e){
+  const c = e && e.code;
+  if(c === 'not_granted') return 'Para generar aquí necesitas permitir que la página consulte a Claude. También puedes usar "Pedir más a Claude".';
+  if(c === 'rate_limited') return 'Claude está ocupado. Intenta en un par de minutos.';
+  if(c === 'sampling_disabled') return 'Tu organización no permite que las páginas consulten a Claude. Usa "Pedir más a Claude".';
+  return 'No se pudieron generar ejercicios. Intenta de nuevo o usa "Pedir más a Claude".';
+}
+
+/* ---------------- run ---------------- */
+function startRun(id){
+  const s = DB.sets[id]; if(!s) return;
+  if(s.status !== 'in_progress'){ s.status = 'in_progress'; s.startedAt = Date.now(); save(); }
+  S.run = { id, qs: s.questions, answers: clone(s.answers || {}), marked: clone(s.marked || {}), idx: Math.min(s.idx || 0, s.questions.length - 1),
+    startedAt: s.startedAt, review:false, calcOpen:false, timeHidden:false, limit: DB.settings.timed ? setMinutes(s.questions) * 60 : null };
+  S.view = 'run'; render();
+}
+let saveT = null;
+function persist(){ clearTimeout(saveT); saveT = setTimeout(flush, 300); }
+function flush(){ const r = S.run; if(!r || !DB.sets[r.id]) return; Object.assign(DB.sets[r.id], {answers:r.answers, marked:r.marked, idx:r.idx}); save(); }
+function finishRun(){
+  const r = S.run; removeCalc(); clearTimeout(saveT);
+  const s = DB.sets[r.id]; const today = dkey();
+  Object.assign(s, {answers:r.answers, marked:r.marked, idx:r.idx, status:'done', finishedAt:new Date().toISOString(), seconds: Math.round((Date.now() - r.startedAt)/1000)});
+  s.questions.forEach((q,i) => { const prev = DB.seen[q.id] || {n:0}; DB.seen[q.id] = {n: prev.n + 1, ok: isCorrect(q, r.answers[i]), d: today}; });
+  save(); const id = r.id; S.run = null; openResults(id);
+}
+function elapsed(){ return (Date.now() - S.run.startedAt) / 1000; }
+setInterval(() => {
+  const r = S.run; if(!r || S.view !== 'run') return;
+  const el = document.getElementById('tmr'); const rem = r.limit != null ? r.limit - elapsed() : null;
+  if(el){ el.textContent = r.timeHidden ? '' : (rem != null ? fmtTime(rem) : fmtTime(elapsed())); el.classList.toggle('low', rem != null && rem <= 120); }
+  if(rem != null && rem <= 0 && !r.ending){ r.ending = true; toast('Time is up.'); finishRun(); }
+}, 500);
+
+function runView(){
+  const r = S.run, q = r.qs[r.idx]; const n = r.qs.length;
+  const isQ = TYPES[q.type].sec === 'Q';
+  const rem = r.limit != null ? r.limit - elapsed() : null;
+  const top = h('header',{class:'tbar'},
+    h('button',{class:'tbtn',text:'Exit',onclick:()=>{ flush(); removeCalc(); S.run = null; S.view = 'home'; render(); }}),
+    h('span',{class:'ttl',text: r.review ? 'Review' : `Question ${r.idx+1} of ${n}`}),
+    h('span',{class:'spacer'}),
+    isQ && !r.review ? h('button',{class:'tbtn',id:'calcbtn','aria-pressed': r.calcOpen?'true':'false',text:'Calculator',onclick:toggleCalc}) : null,
+    !r.review ? h('button',{class:'tbtn','aria-pressed': r.marked[r.idx]?'true':'false',text: r.marked[r.idx] ? 'Marked' : 'Mark',onclick:()=>{ if(r.marked[r.idx]) delete r.marked[r.idx]; else r.marked[r.idx] = true; persist(); render(); }}) : null);
+  const sb = h('div',{class:'sbar'},
+    h('span',{text: r.review ? 'Select a question number to go to that question.' : (isQ ? 'Quantitative Reasoning' : 'Verbal Reasoning') + ' · ' + EN_TYPE[q.type]}),
+    h('span',{class:'spacer'}),
+    h('span',{class:'timer' + (rem != null && rem <= 120 ? ' low' : ''),id:'tmr',text: r.timeHidden ? '' : (rem != null ? fmtTime(rem) : fmtTime(elapsed()))}),
+    h('button',{class:'tbtn',style:'color:inherit;border-color:currentColor;padding:2px 8px;min-height:0',text: r.timeHidden ? 'Show Time' : 'Hide Time',onclick:()=>{ r.timeHidden = !r.timeHidden; render(); }}));
+  let body, foot;
+  if(r.review){
+    const un = r.qs.filter((qq,i) => !isAnswered(qq, r.answers[i])).length;
+    body = h('div',{class:'qpad'},
+      h('h2',{class:'serif',style:'margin:0 0 4px;font-weight:600',text:'Review'}),
+      h('p',{class:'muted small',style:'margin:0',text: (un ? `${un} not answered.` : 'All questions answered.') + ' Marked questions are shown in amber.'}),
+      h('div',{class:'dots'}, r.qs.map((qq,i) => h('button',{class:[isAnswered(qq, r.answers[i]) ? 'done' : '', r.marked[i] ? 'flag' : '', i === r.idx ? 'cur' : ''].join(' '),'aria-label':`Question ${i+1}`,text:String(i+1),onclick:()=>{ r.idx = i; r.review = false; persist(); render(); }}))));
+    foot = h('div',{class:'foot'}, h('button',{class:'btn',text:'Return',onclick:()=>{ r.review = false; render(); }}), h('button',{class:'btn primary',text:'End Session',onclick:confirmFinish}));
+  } else {
+    body = questionView(q, r);
+    foot = h('div',{class:'foot'},
+      h('button',{class:'btn',text:'Back',disabled:r.idx===0,onclick:()=>{ r.idx--; persist(); render(); }}),
+      h('button',{class:'btn',text:'Review',onclick:()=>{ r.review = true; render(); }}),
+      h('button',{class:'btn primary',text: r.idx === n-1 ? 'Finish' : 'Next',onclick:()=>{ if(r.idx < n-1){ r.idx++; persist(); render(); } else { r.review = true; render(); } }}));
+  }
+  return h('div',{class:'exam'}, top, sb, h('main',{class:'stage'}, body), foot);
+}
+function confirmFinish(){
+  const r = S.run; const un = r.qs.filter((qq,i) => !isAnswered(qq, r.answers[i])).length;
+  openModal(h('div',{class:'modal',role:'dialog','aria-modal':'true'},
+    h('h2',{text:'End this session?'}), h('p',{text: (un ? `You have ${un} unanswered question${un>1?'s':''}. ` : '') + 'You will see your score, the correct answers, and a worked solution for each question.'}),
+    h('div',{class:'row',style:'justify-content:flex-end;margin-top:14px'}, h('button',{class:'btn',text:'Continue Working',onclick:closeModal}), h('button',{class:'btn primary',text:'End Session',onclick:()=>{ closeModal(); finishRun(); }}))));
+}
+function questionView(q, r){
+  const v = r.answers[r.idx]; const kids = [];
+  if(q.passage) kids.push(h('div',{class:'passage',text:q.passage}));
+  const dir = {qc:'Compare Quantity A and Quantity B, using the information given, if any. Select one answer choice.', mc:'Select one answer choice.', ms:'Select one or more answer choices.', ne:'Enter your answer in the box. You may enter an integer, a decimal, or a fraction such as 3/4.', tc:q.blanks && q.blanks.length > 1 ? 'For each blank, select one entry from the corresponding column. Fill all blanks in the way that best completes the text.' : 'Select one entry for the blank. Fill the blank in the way that best completes the text.', se:'Select the two answer choices that best complete the sentence and produce sentences that are alike in meaning.'}[q.type] || (q.type==='rc' ? (q.multi ? 'Consider each of the choices separately and select all that apply.' : 'Select one answer choice.') : '');
+  if(dir) kids.push(h('p',{class:'q-dir',text:dir}));
+  if(q.type === 'qc'){
+    if(q.info) kids.push(h('div',{class:'qc-info',text:q.info}));
+    kids.push(h('div',{class:'qc'}, h('div',null,h('b',{text:'Quantity A'}),h('span',{text:q.quantityA})), h('div',null,h('b',{text:'Quantity B'}),h('span',{text:q.quantityB}))));
+    if(q.stem && q.stem.trim() && q.stem.trim() !== q.info) kids.push(h('div',{class:'q-stem',text:q.stem}));
+  } else kids.push(h('div',{class:'q-stem',text:q.stem}));
+  if(q.type === 'ne'){
+    kids.push(h('input',{class:'numbox',id:'numans',inputmode:'decimal',autocomplete:'off','aria-label':'Your answer',value: v || '', oninput:e=>{ const x = e.target.value; if(x.trim()) r.answers[r.idx] = x; else delete r.answers[r.idx]; persist(); }}));
+  } else if(q.type === 'tc'){
+    const cur = Array.isArray(v) ? [...v] : q.blanks.map(()=>null);
+    q.blanks.forEach((b, bi) => {
+      const box = h('div',{class:'opts',role:'radiogroup','aria-label':`Blank ${['(i)','(ii)','(iii)'][bi]}`});
+      b.forEach((o, oi) => box.append(h('button',{class:'opt',role:'radio','aria-checked': cur[bi] === oi ? 'true':'false',onclick:()=>{
+        const a = Array.isArray(r.answers[r.idx]) ? [...r.answers[r.idx]] : q.blanks.map(()=>null); a[bi] = a[bi] === oi ? null : oi;
+        r.answers[r.idx] = a; box.querySelectorAll('.opt').forEach((el,j) => el.setAttribute('aria-checked', a[bi] === j ? 'true':'false')); persist(); }},
+        h('span',{class:'mk','aria-hidden':'true'}), h('span',{class:'ot',text:o}))));
+      kids.push(h('div',{class:'blank'}, q.blanks.length > 1 ? h('h3',{text:'Blank ' + ['(i)','(ii)','(iii)'][bi]}) : null, box));
+    });
+  } else {
+    const multi = isMultiPick(q); const opts = optsOf(q);
+    const box = h('div',{class:'opts',role: multi ? 'group' : 'radiogroup'});
+    opts.forEach((o, i) => {
+      const on = multi ? Array.isArray(v) && v.includes(i) : v === i;
+      box.append(h('button',{class:'opt' + (multi ? ' sq' : ''),role: multi ? 'checkbox' : 'radio','aria-checked': on ? 'true':'false',onclick:()=>{
+        if(multi){ let a = Array.isArray(r.answers[r.idx]) ? [...r.answers[r.idx]] : []; a = a.includes(i) ? a.filter(x=>x!==i) : a.concat(i).sort((x,y)=>x-y);
+          if(q.type === 'se' && a.length > 2){ toast('Select exactly two answer choices.'); return; }
+          if(a.length) r.answers[r.idx] = a; else delete r.answers[r.idx]; }
+        else { if(r.answers[r.idx] === i) delete r.answers[r.idx]; else r.answers[r.idx] = i; }
+        const nv = r.answers[r.idx]; box.querySelectorAll('.opt').forEach((el,j) => el.setAttribute('aria-checked', (multi ? Array.isArray(nv) && nv.includes(j) : nv === j) ? 'true':'false')); persist(); }},
+        h('span',{class:'mk','aria-hidden':'true'}), h('span',{class:'ot',text:o})));
+    });
+    kids.push(box);
+  }
+  return h('div',{class:'qpad'}, kids);
+}
+
+/* ---------------- results ---------------- */
+function openResults(id){ S.resultsId = id; S.view = 'results'; S.onlyWrong = false; render(); const m = document.querySelector('.main'); if(m) m.scrollTop = 0; }
+function resultsView(){
+  const s = DB.sets[S.resultsId];
+  const back = () => { S.view = 'home'; render(); };
+  if(!s){ S.view = 'home'; return root(); }
+  const sc = scoreOf(s); const pct = sc.t ? Math.round(sc.c/sc.t*100) : 0;
+  const items = s.questions.map((q,i) => ({q, i, v:(s.answers||{})[i], ok:isCorrect(q, (s.answers||{})[i])})).filter(x => !S.onlyWrong || !x.ok);
+  return h('div',{class:'shell'},
+    h('header',{class:'head'}, h('h1',{text:'Resultados'}), h('p',{text: dlabel(s.date) + (s.seconds ? ' · ' + fmtTime(s.seconds) + ' min' : '')})),
+    h('main',{class:'main'}, h('div',{class:'wrap'},
+      h('div',{class:'card'},
+        h('div',{class:'big',text:`${sc.c} / ${sc.t}`}), h('p',{class:'muted',style:'margin:4px 0 0',text:`${pct}% de aciertos`}),
+        h('div',{class:'stat'}, h('div',null,h('strong',{text: sc.tq ? `${sc.cq}/${sc.tq}` : '—'}),h('span',{text:'cuantitativo'})), h('div',null,h('strong',{text: sc.tv ? `${sc.cv}/${sc.tv}` : '—'}),h('span',{text:'verbal'})), h('div',null,h('strong',{text:String(sc.t - sc.c)}),h('span',{text:'a repasar'}))),
+        h('label',{class:'check',style:'margin-top:10px'}, h('input',{type:'checkbox',checked:S.onlyWrong,onchange:e=>{ S.onlyWrong = e.target.checked; renderKeep(); }}), h('span',{text:'Mostrar solo las incorrectas'}))),
+      h('div',{class:'card'}, items.length ? items.map(({q,i,v,ok}) => h('div',{class:'res-q'},
+        h('div',{class:'row'}, h('strong',{text:`${i+1}.`}), h('span',{class: ok ? 'ok' : 'bad', text: ok ? 'Correcta' : 'Incorrecta'}), h('span',{class:'spacer'}), h('span',{class:'tag',text: TYPES[q.type].name + (q.topic ? ' · ' + q.topic : '')})),
+        q.passage ? h('details',null, h('summary',{text:'Ver texto de lectura'}), h('div',{class:'passage',style:'margin-top:8px',text:q.passage})) : null,
+        q.type === 'qc' ? h('div',{style:'margin-top:8px'}, q.info ? h('div',{class:'qc-info',text:q.info}) : null, h('div',{class:'qc'}, h('div',null,h('b',{text:'Quantity A'}),h('span',{text:q.quantityA})), h('div',null,h('b',{text:'Quantity B'}),h('span',{text:q.quantityB})))) : null,
+        q.type !== 'qc' || (q.stem && q.stem !== q.info) ? h('div',{class:'q-stem',style:'margin:8px 0 0;font-size:1.02rem',text:q.stem}) : null,
+        q.type !== 'qc' && q.type !== 'ne' && q.type !== 'tc' ? h('div',{class:'small muted pre',style:'margin-top:6px',text: optsOf(q).map((o,k) => L5[k] + ') ' + o).join('\n')}) : null,
+        q.type === 'tc' ? h('div',{class:'small muted pre',style:'margin-top:6px',text: q.blanks.map((b,bi) => (q.blanks.length>1 ? ['(i)','(ii)','(iii)'][bi] + ': ' : '') + b.join(' · ')).join('\n')}) : null,
+        h('div',{class:'ansline'}, h('span',{class:'muted',text:'Tu respuesta'}), h('span',{class: ok ? 'ok' : 'bad',text:ansText(q, v)}), h('span',{class:'muted',text:'Correcta'}), h('strong',{text:keyText(q)})),
+        h('div',{class:'sol'}, h('b',{text:'Procedimiento'}), q.solution)
+      )) : h('p',{class:'muted',text:'No tuviste respuestas incorrectas en este set.'})))),
+    h('div',{class:'foot'}, h('button',{class:'btn primary',text:'Listo',onclick:back})));
+}
+
+/* ---------------- history ---------------- */
+function statsOf(){
+  const done = setsSorted().filter(s => s.status === 'done');
+  let c=0,t=0,cq=0,tq=0,cv=0,tv=0; const byType = {};
+  done.forEach(s => { const x = scoreOf(s); c+=x.c; t+=x.t; cq+=x.cq; tq+=x.tq; cv+=x.cv; tv+=x.tv;
+    s.questions.forEach((q,i) => { const b = byType[q.type] = byType[q.type] || {c:0,t:0}; b.t++; if(isCorrect(q,(s.answers||{})[i])) b.c++; }); });
+  const days = new Set(done.map(s => s.date)); let streak = 0; const d = new Date();
+  if(!days.has(dkey(d))) d.setDate(d.getDate()-1);
+  for(let i=0;i<400;i++){ if(days.has(dkey(d))){ streak++; d.setDate(d.getDate()-1); } else if(!isScheduled(d)){ d.setDate(d.getDate()-1); } else break; }
+  return {sets:done.length, pct: t ? Math.round(c/t*100) : 0, pq: tq ? Math.round(cq/tq*100) : null, pv: tv ? Math.round(cv/tv*100) : null, byType, streak};
+}
+function histView(){
+  const st = statsOf(); const all = setsSorted(); const kids = [];
+  if(!all.length) return [h('div',{class:'card'}, h('h2',{text:'Aún no hay sesiones'}), h('p',{class:'muted',text:'Cuando termines tu primer set verás aquí tu avance.'}))];
+  if(st.sets) kids.push(h('div',{class:'card'}, h('h2',{text:'Por tipo de ejercicio'}),
+    Object.keys(TYPES).filter(k => st.byType[k]).map(k => { const b = st.byType[k]; const p = Math.round(b.c/b.t*100);
+      return h('div',{style:'margin:10px 0'}, h('div',{class:'row small'}, h('span',{text:TYPES[k].name}), h('span',{class:'spacer'}), h('strong',{text:`${p}%`}), h('span',{class:'muted',text:`(${b.c}/${b.t})`})), h('div',{class:'progress',style:'margin-top:4px'}, h('i',{style:`width:${p}%`}))); })));
+  const mt = missedTopics();
+  if(mt.length) kids.push(h('div',{class:'card'}, h('h2',{text:'Temas a reforzar'}), h('p',{class:'small muted',style:'margin:0 0 8px',text:'Los siguientes sets priorizan estos temas, y van incluidos en las instrucciones para pedir más a Claude.'}), h('div',{class:'chips'}, mt.map(t => h('span',{class:'pill',text:t})))));
+  kids.push(h('div',{class:'card'}, h('h2',{text:'Sesiones'}), h('div',{class:'list'}, all.map(s => { const sc = scoreOf(s);
+    return h('button',{onclick:()=> s.status === 'done' ? openResults(s.id) : startRun(s.id)},
+      h('div',{style:'flex:1'}, h('div',{style:'font-weight:600;text-transform:capitalize',text:dlabel(s.date) + (s.extra ? ' · extra' : '')}), h('div',{class:'small muted',text:`${s.questions.length} ejercicios`})),
+      s.status === 'done' ? h('strong',{text:`${sc.c}/${sc.t}`}) : h('span',{class:'pill',text: s.status === 'in_progress' ? 'En curso' : 'Pendiente'})); }))));
+  return kids;
+}
+
+/* ---------------- settings ---------------- */
+function settingsView(){
+  const st = DB.settings; const DAYS = ['D','L','M','M','J','V','S']; const order = [1,2,3,4,5,6,0];
+  const upd = () => { save(); renderKeep(); };
+  const restoreTa = h('textarea',{class:'input',style:'min-height:80px;font-size:.8rem',placeholder:'Pega aquí un respaldo para restaurarlo'});
+  return [
+    h('div',{class:'card'},
+      h('div',{class:'field'}, h('span',{class:'lbl',text:'Días de práctica'}), h('div',{class:'chips'}, order.map(d => h('button',{class:'chip','aria-pressed': st.days.includes(d)?'true':'false','aria-label':['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][d],text:DAYS[d],onclick:()=>{ st.days = st.days.includes(d) ? st.days.filter(x=>x!==d) : st.days.concat(d); upd(); }})))),
+      h('div',{class:'field'}, h('span',{class:'lbl',text:'Ejercicios por sesión'}), h('div',{class:'chips'}, [5,10,15,20,27].map(n => h('button',{class:'chip','aria-pressed': st.perDay===n?'true':'false',text:String(n),onclick:()=>{ st.perDay = n; upd(); }})))),
+      h('div',{class:'field'}, h('label',{for:'mix',text:`Mezcla: ${st.quantPct}% cuantitativo · ${100-st.quantPct}% verbal`}), h('input',{type:'range',id:'mix',min:'0',max:'100',step:'10',value:String(st.quantPct),oninput:e=>{ st.quantPct = Number(e.target.value); e.target.previousSibling.textContent = `Mezcla: ${st.quantPct}% cuantitativo · ${100-st.quantPct}% verbal`; save(); }})),
+      h('div',{class:'field'}, h('span',{class:'lbl',text:'Dificultad'}), h('div',{class:'chips'}, [['mixta','Mixta'],['media','Media'],['dificil','Difícil']].map(([k,l]) => h('button',{class:'chip','aria-pressed': st.difficulty===k?'true':'false',text:l,onclick:()=>{ st.difficulty = k; upd(); }}))))),
+    h('div',{class:'card'}, h('h2',{text:'Tipos de ejercicio'}),
+      ['Q','V'].map(sec => h('div',null, h('div',{class:'small muted',style:'margin-top:8px',text: sec === 'Q' ? 'Cuantitativo' : 'Verbal'}),
+        Object.keys(TYPES).filter(k => TYPES[k].sec === sec).map(k => h('label',{class:'check'}, h('input',{type:'checkbox',checked:st.types.includes(k),onchange:e=>{ st.types = e.target.checked ? st.types.concat(k) : st.types.filter(x=>x!==k); save(); }}), h('span',{text:TYPES[k].name})))))),
+    h('div',{class:'card'},
+      h('label',{class:'check'}, h('input',{type:'checkbox',checked:st.timed,onchange:e=>{ st.timed = e.target.checked; save(); }}), h('span',null, h('strong',{text:'Cronómetro con ritmo GRE'}), h('br'), h('span',{class:'small muted',text:'Unos 1:45 por ejercicio cuantitativo y 1:30 por verbal. Al llegar a cero la sesión se cierra.'}))),
+      h('div',{class:'field'}, h('label',{for:'focus',text:'Temas que quieres reforzar (opcional)'}), h('input',{class:'input',id:'focus',value:st.focus,placeholder:'Ej. probabilidad, comparación, vocabulario',oninput:e=>{ st.focus = e.target.value; save(); }}))),
+    h('div',{class:'card'}, h('h2',{text:'Respaldo'}),
+      h('p',{class:'small muted',style:'margin:0 0 10px',text:'Tu progreso y los ejercicios que agregues viven solo en este teléfono. Copia un respaldo de vez en cuando y guárdalo en Notas.'}),
+      h('div',{class:'row'}, h('button',{class:'btn',text:'Copiar respaldo',onclick:async()=>{ toast(await copyText(JSON.stringify({app:'gre-diario',v:2,data:DB})) ? 'Respaldo copiado.' : 'No se pudo copiar.'); }})),
+      h('div',{class:'field'}, restoreTa),
+      h('div',{class:'row'}, h('button',{class:'btn',text:'Restaurar respaldo',onclick:()=>{ try{ const x = JSON.parse(restoreTa.value); if(!x || x.app !== 'gre-diario' || !x.data) throw 0;
+          openModal(h('div',{class:'modal'}, h('h2',{text:'¿Restaurar respaldo?'}), h('p',{text:'Reemplaza el progreso actual de este teléfono.'}), h('div',{class:'row',style:'justify-content:flex-end'}, h('button',{class:'btn',text:'Cancelar',onclick:closeModal}), h('button',{class:'btn primary',text:'Restaurar',onclick:()=>{ localStorage.setItem(LS, JSON.stringify(x.data)); DB = loadDB(); closeModal(); toast('Respaldo restaurado.'); S.tab = 'home'; render(); }}))));
+        }catch(e){ toast('Ese texto no es un respaldo válido.'); } }}))),
+    h('p',{class:'small muted',text:'Ejercicios originales con el formato del GRE General Test, no preguntas oficiales de ETS. Para material oficial usa los exámenes POWERPREP.'})
+  ];
+}
+
+/* ---------------- modal ---------------- */
+function openModal(c){ closeModal(); const ov = h('div',{class:'ov',id:'ov',onclick:e=>{ if(e.target === ov) closeModal(); }}, c); document.body.append(ov); }
+function closeModal(){ const o = document.getElementById('ov'); if(o) o.remove(); }
+/* ---------------- calculator ---------------- */
+const C = {entry:'0', tokens:[], active:false, replace:true, mem:0, err:false, x:null, y:null};
+function cFmt(n){ if(!isFinite(n) || Math.abs(n) >= 1e12) return null; let s = String(Number(n.toPrecision(10))); if(s === '-0') s = '0'; return s; }
+function cPushNum(n){ const l = C.tokens[C.tokens.length-1]; if(typeof l === 'number' || l === ')') C.tokens.push('×'); C.tokens.push(n); }
+function cEval(tokens){
+  const prec = {'+':1,'−':1,'×':2,'÷':2}; const out = [], ops = [];
+  const apply = () => { const op = ops.pop(); const b = out.pop(), a = out.pop(); if(a == null || b == null) throw 0; if(op === '÷' && b === 0) throw 'div'; out.push(op==='+'?a+b:op==='−'?a-b:op==='×'?a*b:a/b); };
+  for(const t of tokens){ if(typeof t === 'number') out.push(t); else if(t === '(') ops.push(t); else if(t === ')'){ while(ops.length && ops[ops.length-1] !== '(') apply(); ops.pop(); }
+    else { while(ops.length && ops[ops.length-1] !== '(' && prec[ops[ops.length-1]] >= prec[t]) apply(); ops.push(t); } }
+  while(ops.length){ if(ops[ops.length-1] === '(') ops.pop(); else apply(); }
+  if(out.length !== 1) throw 0; return out[0];
+}
+function cErr(){ C.err = true; C.entry = 'Error'; C.tokens = []; C.active = false; C.replace = true; updCalc(); }
+function calcPress(k){
+  if(C.err && k !== 'C') return; const isOp = t => typeof t === 'string' && '+−×÷'.includes(t) && t.length === 1;
+  const open = () => C.tokens.filter(t=>t==='(').length - C.tokens.filter(t=>t===')').length;
+  if(/^[0-9]$/.test(k)){ if(C.replace || !C.active){ C.entry = k; C.replace = false; } else if(C.entry.replace(/[-.]/g,'').length < 10) C.entry = C.entry === '0' ? k : C.entry === '-0' ? '-'+k : C.entry + k; C.active = true; }
+  else if(k === '.'){ if(C.replace || !C.active){ C.entry = '0.'; C.replace = false; } else if(!C.entry.includes('.')) C.entry += '.'; C.active = true; }
+  else if(k === '±'){ if(C.entry !== '0') C.entry = C.entry.startsWith('-') ? C.entry.slice(1) : '-' + C.entry; C.active = true; }
+  else if(k === '√'){ const v = Number(C.entry); if(v < 0) return cErr(); const s = cFmt(Math.sqrt(v)); if(s == null) return cErr(); C.entry = s; C.active = true; C.replace = true; }
+  else if(isOp(k)){ const l = C.tokens[C.tokens.length-1];
+    if(C.active){ cPushNum(Number(C.entry)); C.active = false; } else if(isOp(l)) C.tokens.pop(); else if(l === '(' || !C.tokens.length) C.tokens.push(Number(C.entry));
+    try{ if(open() === 0){ const p = cFmt(cEval(C.tokens)); if(p != null) C.entry = p; } }catch(e){ if(e === 'div') return cErr(); }
+    C.tokens.push(k); C.replace = true; }
+  else if(k === '('){ if(C.active){ cPushNum(Number(C.entry)); C.active = false; } const l = C.tokens[C.tokens.length-1]; if(typeof l === 'number' || l === ')') C.tokens.push('×'); C.tokens.push('('); C.replace = true; }
+  else if(k === ')'){ if(open() <= 0) return; if(C.active){ cPushNum(Number(C.entry)); C.active = false; } else if(isOp(C.tokens[C.tokens.length-1]) || C.tokens[C.tokens.length-1] === '(') return;
+    C.tokens.push(')'); let depth = 0, i = C.tokens.length-1; for(; i>=0; i--){ if(C.tokens[i]===')') depth++; else if(C.tokens[i]==='('){ depth--; if(depth===0) break; } }
+    try{ const p = cFmt(cEval(C.tokens.slice(i+1,-1))); if(p != null) C.entry = p; }catch(e){ if(e === 'div') return cErr(); } C.replace = true; }
+  else if(k === '='){ if(C.active){ cPushNum(Number(C.entry)); C.active = false; }
+    while(C.tokens.length && (isOp(C.tokens[C.tokens.length-1]) || C.tokens[C.tokens.length-1] === '(')) C.tokens.pop();
+    if(C.tokens.length){ try{ const s = cFmt(cEval(C.tokens)); if(s == null) return cErr(); C.entry = s; }catch(e){ return cErr(); } C.tokens = []; }
+    C.active = true; C.replace = true; }
+  else if(k === 'C'){ C.entry = '0'; C.tokens = []; C.active = false; C.replace = true; C.err = false; }
+  else if(k === 'CE'){ C.entry = '0'; C.active = false; C.replace = true; }
+  else if(k === 'M+'){ const v = Number(C.entry); if(isFinite(v)) C.mem += v; C.replace = true; }
+  else if(k === 'MR'){ C.entry = cFmt(C.mem) || '0'; C.active = true; C.replace = true; }
+  else if(k === 'MC'){ C.mem = 0; }
+  updCalc();
+}
+function updCalc(){ const d = document.getElementById('calcv'); if(d) d.textContent = C.entry; const m = document.getElementById('calcm'); if(m) m.textContent = C.mem ? 'M' : ''; }
+function removeCalc(){ const c = document.getElementById('calc'); if(c) c.remove(); }
+function toggleCalc(){ const r = S.run; r.calcOpen = !r.calcOpen; if(r.calcOpen) mountCalc(); else removeCalc(); const b = document.getElementById('calcbtn'); if(b) b.setAttribute('aria-pressed', r.calcOpen ? 'true':'false'); }
+function mountCalc(){
+  const r = S.run; const q = r && r.qs[r.idx];
+  if(!q || r.review || TYPES[q.type].sec !== 'Q'){ removeCalc(); return; }
+  let el = document.getElementById('calc');
+  if(el){ refreshTransfer(); return; }
+  const keys = ['MR','MC','M+','(',')','7','8','9','÷','C','4','5','6','×','CE','1','2','3','−','√','0','.','±','+','='];
+  const head = h('div',{class:'calc-h'}, h('span',{text:'Calculator'}), h('button',{'aria-label':'Close calculator',text:'×',onclick:toggleCalc}));
+  el = h('div',{class:'calc',id:'calc',role:'dialog','aria-label':'Calculator',tabindex:'-1'}, head,
+    h('div',{class:'calc-d','aria-live':'polite'}, h('span',{class:'m',id:'calcm'}), h('span',{id:'calcv',text:C.entry})),
+    h('div',{class:'calc-g'}, keys.map(k => h('button',{class: k === '=' ? 'eq' : '', text:k, 'aria-label': {'√':'Square root','±':'Change sign','CE':'Clear entry','C':'Clear all'}[k] || k, onclick:()=>calcPress(k)}))),
+    h('button',{class:'btn calc-t',id:'calctr',text:'Transfer Display',onclick:()=>{ const rr = S.run, qq = rr.qs[rr.idx]; if(qq.type !== 'ne' || C.err) return; rr.answers[rr.idx] = C.entry; const inp = document.getElementById('numans'); if(inp) inp.value = C.entry; persist(); }}));
+  const W = window.innerWidth, H = window.innerHeight;
+  if(C.x == null){ C.x = Math.max(8, W - 280); C.y = Math.max(60, Math.min(120, H - 420)); }
+  C.x = Math.min(Math.max(0, C.x), Math.max(0, W - 262)); C.y = Math.min(Math.max(0, C.y), Math.max(0, H - 80));
+  el.style.left = C.x + 'px'; el.style.top = C.y + 'px';
+  let drag = null;
+  head.addEventListener('pointerdown', e => { if(e.target.tagName === 'BUTTON' || window.innerWidth <= 560) return; drag = {sx:e.clientX, sy:e.clientY, x:C.x, y:C.y}; head.setPointerCapture(e.pointerId); });
+  head.addEventListener('pointermove', e => { if(!drag) return; C.x = Math.min(Math.max(0, drag.x + e.clientX - drag.sx), window.innerWidth - 60); C.y = Math.min(Math.max(0, drag.y + e.clientY - drag.sy), window.innerHeight - 40); el.style.left = C.x + 'px'; el.style.top = C.y + 'px'; });
+  head.addEventListener('pointerup', () => { drag = null; });
+  el.addEventListener('keydown', e => { const map = {'+':'+','-':'−','*':'×','/':'÷','Enter':'=','=':'=','Escape':'C','Backspace':'CE','.':'.','(':'(',')':')'};
+    if(/^[0-9]$/.test(e.key)){ calcPress(e.key); e.preventDefault(); } else if(map[e.key]){ calcPress(map[e.key]); e.preventDefault(); } });
+  document.body.append(el); refreshTransfer(); updCalc();
+}
+function refreshTransfer(){ const b = document.getElementById('calctr'); if(!b) return; const r = S.run; const q = r && r.qs[r.idx]; b.hidden = !(q && q.type === 'ne'); }
+
+
+/* ---------------- boot ---------------- */
+document.addEventListener('visibilitychange', () => { if(document.hidden){ if(S.run) flush(); } else if(S.view !== 'run'){ render(); } });
+window.addEventListener('pagehide', () => { if(S.run) flush(); });
+render();
+(async () => { if(window.claude && typeof window.claude.use === 'function'){ try{ S.sample = await window.claude.use('sample'); }catch(e){ S.sample = null; } if(S.sample && S.tab === 'bank' && S.view !== 'run') renderKeep(); } })();
+try{ if('serviceWorker' in navigator && location.protocol === 'https:' && window.top === window) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
+})();
+</script>
+</body>
+</html>
